@@ -1,0 +1,10 @@
+[project]
+name = "auto-chunker"
+version = "0.1.0"
+description = "Chunks text and saves it as a jsonl file"
+authors = [{name = "Ashlynn Antrobus", email = "ashlynn@prosepal.io"}]
+requires-python = ">=3.10"
+dependencies = [
+    "grpcio-tools>=1.66.2",
+    "pylint-protobuf>=0.22.0",
+]
