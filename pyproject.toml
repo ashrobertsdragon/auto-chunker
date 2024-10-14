@@ -6,5 +6,7 @@ authors = [{name = "Ashlynn Antrobus", email = "ashlynn@prosepal.io"}]
 requires-python = ">=3.10"
 dependencies = [
     "grpcio-tools>=1.66.2",
+    "loguru>=0.7.2",
+    "openai>=1.51.2",
     "pylint-protobuf>=0.22.0",
 ]
