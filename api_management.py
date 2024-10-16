@@ -2,7 +2,24 @@ import time
 from typing import Any
 
 import openai
+from decouple import config
 from loguru import logger
+
+from _proto.auto_chunker_pb2 import ChunkResponse
+
+
+class NoMessageError(Exception):
+    pass
+
+
+def unresolvable_errors() -> list:
+    return [
+        openai.BadRequestError,
+        openai.AuthenticationError,
+        openai.NotFoundError,
+        openai.PermissionDeniedError,
+        openai.UnprocessableEntityError,
+    ]
 
 
 def check_json_response(response: Any) -> dict:
@@ -28,52 +45,46 @@ def error_handle(e: Any, retry_count: int = 0) -> int:
         retry_count: the number of attempts so far
     """
 
-    unresolvable_user_errors = [
-        openai.BadRequestError,
-        openai.AuthenticationError,
-        openai.NotFoundError,
-        openai.PermissionDeniedError,
-    ]
     error_image = (
         '<img src="/static/alert-light.png" alt="error icon" id="endError">'
     )
-    user_folder = getattr(thread_local_storage, "user_folder", None)
+
     error_code = getattr(e, "status_code", None)
-    error_details = {}
+    error_message = "Unknown error occurred"
+
     if hasattr(e, "response"):
         json_data = check_json_response(e.response)
-        if json_data != {}:
-            error_details = json_data.get("error", {})
-    error_message = error_details.get("message", "Unknown error")
+        if json_data:
+            error_message = json_data.get("error", {}).get(
+                "message", "Unknown error"
+            )
+
     logger.error(
         f"{e}. Error code: {error_code}. Error message: {error_message}"
     )
 
     if (
-        isinstance(e, tuple(unresolvable_user_errors))
+        isinstance(e, tuple(unresolvable_errors()))
         or error_code == 401
         or "exceeded your current quota" in error_message
     ):
-        if user_folder:
-            training_status[user_folder] = f"{error_image} {error_message}"
-
-    if isinstance(e, openai.UnprocessableEntityError):
-        if user_folder:
-            training_status[user_folder] = (
-                f"{error_image} A critical error has occurred. "
-                "The administrator has been contacted. "
-                "Sorry for the inconvenience"
-            )
+        error_message = (
+            f"{error_image} A critical error has occurred. "
+            "The administrator has been contacted. "
+            "Sorry for the inconvenience"
+        )
+        return ChunkResponse(jsonl_content="", status_message=error_message)
 
     retry_count += 1
     if retry_count > 5:
-        logger("Retry count exceeded")
-        if user_folder:
-            training_status[user_folder] = (
-                f"{error_image} A critical error has occurred. "
-                "The administrator has been contacted. "
-                "Sorry for the inconvenience"
-            )
+        logger.error("Retry count exceeded")
+        error_message: str = (
+            "A critical error has occurred. Administrator has been contacted."
+        )
+        return ChunkResponse(
+            jsonl_content="",
+            status_message=error_message,
+        )
     else:
         sleep_time = (5 - retry_count) + (retry_count**2)
         time.sleep(sleep_time)
@@ -92,7 +103,7 @@ def call_gpt_api(prompt: str, retry_count: int = 0) -> str:
         str: The generated content from the OpenAI GPT-3 model.
     """
 
-    client = get_client()
+    client = openai.OpenAI(config("OPENAI_API_KEY"))
 
     role_script = "You are an expert developmental editor who specializes in "
     "writing scene beats that are clear and concise. For the following "
@@ -105,7 +116,7 @@ def call_gpt_api(prompt: str, retry_count: int = 0) -> str:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo-1106",
+            model=config("OPENAI_MODEL"),
             messages=messages,
             temperature=0.7,
             max_tokens=1000,
@@ -113,9 +124,9 @@ def call_gpt_api(prompt: str, retry_count: int = 0) -> str:
         if response.choices and response.choices[0].message.content:
             answer = response.choices[0].message.content.strip()
         else:
-            raise Exception("No message content found")
+            raise NoMessageError("No message content found")
 
-    except Exception as e:
+    except tuple([NoMessageError] + unresolvable_errors()) as e:
         retry_count = error_handle(e, retry_count)
         answer = call_gpt_api(prompt, retry_count)
     return answer
