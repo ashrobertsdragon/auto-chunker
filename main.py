@@ -6,12 +6,12 @@ import _proto.jsonl_file_creator_pb2 as jsonl_file_creator
 import _proto.jsonl_file_creator_pb2_grpc as jsonl_file_creator_grpc
 
 import write_csv
-from chunking import chunk_book
+from chunking import chunk_text
 
 
 def chunk(request: auto_chunker.ChunkRequest) -> auto_chunker.ChunkResponse:
-    chunks, user_messages = chunk_book(
-        request.text_content, request.role, request.chunking_method
+    chunks, user_messages = chunk_text(
+        request.text_content, request.chunking_method
     )
     csv_content = write_csv.create_csv_str(chunks, user_messages, request.role)
     with grpc.insecure_channel("jsonl-file-creator:50053") as channel:
