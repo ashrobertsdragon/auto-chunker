@@ -1,18 +1,26 @@
+from itertools import islice
+
+from decouple import config
+
 from api_management import call_gpt_api
 from chunking_method import ChunkMethod
 from data_preparation import (
-    adjust_to_newline,
     count_tokens,
-    format_for_finetuning,
     separate_into_chapters,
-    sliding_window_format,
     TOKENIZER,
 )
 
 
-def generate_beats(book: str) -> list:
+def generate_beats(book: str) -> tuple[list[str], list[str]]:
     """
-    Generate beats for each chapter in the book using GPT-3.5.
+    Generate beats for each chapter in the book using an LLM.
+
+    Args:
+        book (str): The book text.
+
+    Returns:
+        tuple[list[str], list[str]]: A tuple of formatted chunks and user
+            messages.
     """
     user_message_list = []
     chunk_list = []
@@ -27,12 +35,18 @@ def generate_beats(book: str) -> list:
             f"beats:\n{chapter_beats}"
         )
         chunk_list.append(chapter)
-        return chunk_list, user_message_list
+    return chunk_list, user_message_list
 
 
 def extract_dialogue(paragraph: str) -> tuple[str, str]:
     """
     Extract dialogue and prose from a paragraph.
+
+    Args:
+        paragraph (str): The paragraph text.
+
+    Returns:
+        tuple[str, str]: A tuple of dialogue and prose.
     """
     dialogue = ""
     prose = ""
@@ -65,12 +79,19 @@ def extract_dialogue(paragraph: str) -> tuple[str, str]:
     return prose, dialogue
 
 
-def dialogue_prose(book: str) -> list:
+def dialogue_prose(book: str) -> tuple[list[str], list[str]]:
     """
     Split the book into prose and dialogue chunks.
+
+    Args:
+        book (str): The book text.
+
+    Returns:
+        tuple[list[str], list[str]]: A tuple of formatted chunks and user
+            messages.
     """
-    chunk_list = []
-    user_message_list = []
+    chunks = []
+    user_messages = []
     punctuation = [".", "?", "!"]
     chapters = separate_into_chapters(book)
 
@@ -90,71 +111,81 @@ def dialogue_prose(book: str) -> list:
                     "sentence" if dialogue_sentences == 1 else "sentences"
                 )
             if prose:
-                chunk_list.append(prose)
-                user_message_list.append(
+                chunks.append(prose)
+                user_messages.append(
                     f"Write {prose_sentences} {p_sentence} "
                     "of description and action"
                 )
             if dialogue:
-                chunk_list.append(dialogue)
-                user_message_list.append(
+                chunks.append(dialogue)
+                user_messages.append(
                     f"Write {dialogue_sentences} {d_sentence} of dialogue"
                 )
-    return chunk_list, user_message_list
+    return chunks, user_messages
 
 
-def sliding_window(book: str) -> list:
+def sliding_window(book: str) -> tuple[list[str], list[str]]:
     """
-    Split the book into chunks of 4096 tokens.
+    Split the book into chunks using a sliding window.
+
+    Args:
+        book (str): The book text.
+
+    Returns:
+        tuple[list[str], list[str]]: A tuple of formatted chunks and user
+            messages.
     """
-    chunk_list = []
-    chunk_size = 4096
-    start_index = 0
-    tokens, num_tokens = count_tokens(book)
+    user_messages: list[str] = []
+    chunks: list[str] = []
+    max_chunk_size = config("MAX_CHUNK_SIZE", cast=int, default=4096)
+    chapters = separate_into_chapters(book)
+    for chapter in chapters:
+        tokens, num_tokens = count_tokens(chapter)
+        start_index = 0
 
-    while start_index < num_tokens:
-        end_index = min(start_index + chunk_size, num_tokens)
-        # Adjust end_index to the last newline token in the chunk
-        if end_index < num_tokens:
-            end_index = adjust_to_newline(tokens, end_index)
-        chunk_tokens = tokens[start_index:end_index]
-        chunk_list.append(TOKENIZER.decode(chunk_tokens))
-        start_index = end_index
-    return chunk_list
+        while start_index < num_tokens:
+            end_index = min(start_index + max_chunk_size, num_tokens)
+
+            if end_index < num_tokens:
+                end_index = next(
+                    (
+                        i
+                        for i in range(end_index, start_index, -1)
+                        if tokens[i] == 10
+                    ),
+                    end_index,
+                )
+
+            chunk = TOKENIZER.decode(
+                list(islice(tokens, start_index, end_index))
+            )
+            chunks.append(chunk)
+            user_messages.append(chunk)
+
+            start_index = end_index
+
+    return chunks, user_messages
 
 
-def format_messages(
-    chunks: list, user_messages: list, role: str, chunk_type: ChunkMethod
-) -> list:
-    """
-    Formats chunked data for finetuning.
-    """
-    return (
-        sliding_window_format(chunks, role)
-        if chunk_type == ChunkMethod.sliding_window
-        else format_for_finetuning(chunks, user_messages, role)
-    )
-
-
-def chunk_text(book: str, chunk_type: ChunkMethod) -> tuple[list, list]:
+def chunk_text(
+    book: str, chunk_type: ChunkMethod
+) -> tuple[list[str], list[str]]:
     """
     Split the book into chunks of the specified type.
+
+    Args:
+        book (str): The book text.
+        chunk_type (ChunkMethod): The type of chunking to use.
+
+    Returns:
+        tuple[list, list]: A tuple of formatted chunks and user messages.
     """
     chunks = []
     user_messages = []
     if chunk_type == ChunkMethod.SLIDING_WINDOW:
-        chunks = sliding_window(book)
+        chunks, user_messages = sliding_window(book)
     if chunk_type == ChunkMethod.DIALOGUE_PROSE:
         chunks, user_messages = dialogue_prose(book)
     if chunk_type == ChunkMethod.GENERATE_BEATS:
         chunks, user_messages = generate_beats(book)
     return chunks, user_messages
-
-
-def chunk_book(book: str, role: str, chunk_type: str) -> list:
-    """
-    Split the book into chunks of the specified type.
-    """
-    chunks, user_messages = chunk_text(book, chunk_type)
-
-    return format_messages(chunks, user_messages, role, chunk_type)

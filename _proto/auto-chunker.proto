@@ -18,4 +18,5 @@ message ChunkRequest {
 
 message ChunkResponse {
   string jsonl_content = 1;
+  string status_message = 2;
 }
