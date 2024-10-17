@@ -33,7 +33,7 @@ def check_json_response(response: Any) -> dict:
         return {}
 
 
-def error_handle(e: Any, retry_count: int = 0) -> int:
+def error_handle(e: Any, retry_count: int = 0) -> int | ChunkResponse:
     """
     Determines whether error is unresolvable or should be retried. If
     unresolvable, error is logged and administrator is emailed before exit.
@@ -44,7 +44,9 @@ def error_handle(e: Any, retry_count: int = 0) -> int:
         retry_count: the number of attempts so far
 
     Returns:
-        retry_count: the number of attempts so far
+        int: the number of attempts so far
+        ChunkResponse: the API response body with status message instead of
+            JSONL
     """
 
     error_image = (
@@ -55,11 +57,12 @@ def error_handle(e: Any, retry_count: int = 0) -> int:
     error_message = "Unknown error occurred"
 
     if hasattr(e, "response"):
-        json_data = check_json_response(e.response)
-        if json_data:
+        if json_data := check_json_response(e.response):
             error_message = json_data.get("error", {}).get(
                 "message", "Unknown error"
             )
+        else:
+            error_message = str(e)
 
     logger.error(
         f"{e}. Error code: {error_code}. Error message: {error_message}"
