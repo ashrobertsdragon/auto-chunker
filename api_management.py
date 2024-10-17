@@ -2,10 +2,12 @@ import time
 from typing import Any
 
 import openai
-from decouple import config
 from loguru import logger
 
 from _proto.auto_chunker_pb2 import ChunkResponse
+from openai_client import OpenAIAPI
+
+CLIENT = OpenAIAPI()
 
 
 class NoMessageError(Exception):
@@ -91,7 +93,7 @@ def error_handle(e: Any, retry_count: int = 0) -> int:
     return retry_count
 
 
-def call_gpt_api(prompt: str, retry_count: int = 0) -> str:
+def call_gpt_api(prompt: str, retry_count: int = 0, client=CLIENT) -> str:
     """
     Makes API calls to the OpenAI ChatCompletions engine.
 
@@ -103,8 +105,6 @@ def call_gpt_api(prompt: str, retry_count: int = 0) -> str:
         str: The generated content from the OpenAI GPT-3 model.
     """
 
-    client = openai.OpenAI(config("OPENAI_API_KEY"))
-
     role_script = "You are an expert developmental editor who specializes in "
     "writing scene beats that are clear and concise. For the following "
     "chapter, please reverse engineer the scene beats for the author. Provide "
@@ -115,12 +115,7 @@ def call_gpt_api(prompt: str, retry_count: int = 0) -> str:
     ]
 
     try:
-        response = client.chat.completions.create(
-            model=config("OPENAI_MODEL"),
-            messages=messages,
-            temperature=0.7,
-            max_tokens=1000,
-        )
+        response = client.call_api(messages)
         if response.choices and response.choices[0].message.content:
             answer = response.choices[0].message.content.strip()
         else:
