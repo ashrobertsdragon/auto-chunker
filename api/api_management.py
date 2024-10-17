@@ -96,7 +96,11 @@ def error_handle(e: Any, retry_count: int = 0) -> int | ChunkResponse:
     return retry_count
 
 
-def call_gpt_api(prompt: str, retry_count: int = 0, client=CLIENT) -> str:
+def call_gpt_api(
+    prompt: str,
+    client=CLIENT,
+    retry_count: int = 0,
+) -> str:
     """
     Makes API calls to the OpenAI ChatCompletions engine.
 
@@ -125,6 +129,6 @@ def call_gpt_api(prompt: str, retry_count: int = 0, client=CLIENT) -> str:
             raise NoMessageError("No message content found")
 
     except tuple([NoMessageError] + unresolvable_errors()) as e:
-        retry_count = error_handle(e, retry_count)
-        answer = call_gpt_api(prompt, retry_count)
+        retry_count = error_handle(e=e, retry_count=retry_count)
+        answer = call_gpt_api(prompt, client, retry_count)
     return answer
