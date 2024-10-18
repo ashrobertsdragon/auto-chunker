@@ -11,12 +11,12 @@ from data_preparation import (
 )
 
 
-def generate_beats(book: str) -> tuple[list[str], list[str]]:
+def generate_beats(chapters: list[str]) -> tuple[list[str], list[str]]:
     """
     Generate beats for each chapter in the book using an LLM.
 
     Args:
-        book (str): The book text.
+        chapters (list[str]): The list of chapter texts.
 
     Returns:
         tuple[list[str], list[str]]: A tuple of formatted chunks and user
@@ -24,7 +24,6 @@ def generate_beats(book: str) -> tuple[list[str], list[str]]:
     """
     user_message_list = []
     chunk_list = []
-    chapters = separate_into_chapters(book)
 
     for chapter in chapters:
         words = len(chapter.split(" "))
@@ -48,14 +47,14 @@ def extract_dialogue(paragraph: str) -> tuple[str, str]:
     Returns:
         tuple[str, str]: A tuple of dialogue and prose.
     """
-    dialogue = ""
-    prose = ""
-    sentence = ""
+    dialogue = str()
+    prose = str()
+    sentence = str()
     check_next_char = False
     end_sentence = False
     in_dialogue = False
-    punctuation = [".", "?", "!"]
-    quote_count = 0
+    punctuation: list[str] = [".", "?", "!"]
+    quote_count: int = 0
 
     for i, char in enumerate(paragraph):
         sentence += char
@@ -79,12 +78,12 @@ def extract_dialogue(paragraph: str) -> tuple[str, str]:
     return prose, dialogue
 
 
-def dialogue_prose(book: str) -> tuple[list[str], list[str]]:
+def dialogue_prose(chapters: list[str]) -> tuple[list[str], list[str]]:
     """
     Split the book into prose and dialogue chunks.
 
     Args:
-        book (str): The book text.
+        chapters (list[str]): The list of chapter texts.
 
     Returns:
         tuple[list[str], list[str]]: A tuple of formatted chunks and user
@@ -93,7 +92,6 @@ def dialogue_prose(book: str) -> tuple[list[str], list[str]]:
     chunks = []
     user_messages = []
     punctuation = [".", "?", "!"]
-    chapters = separate_into_chapters(book)
 
     for chapter in chapters:
         paragraphs = chapter.split("\n")
@@ -124,12 +122,12 @@ def dialogue_prose(book: str) -> tuple[list[str], list[str]]:
     return chunks, user_messages
 
 
-def sliding_window(book: str) -> tuple[list[str], list[str]]:
+def sliding_window(chapters: list[str]) -> tuple[list[str], list[str]]:
     """
     Split the book into chunks using a sliding window.
 
     Args:
-        book (str): The book text.
+        chapters (list[str]): The list of chapter texts.
 
     Returns:
         tuple[list[str], list[str]]: A tuple of formatted chunks and user
@@ -138,7 +136,6 @@ def sliding_window(book: str) -> tuple[list[str], list[str]]:
     user_messages: list[str] = []
     chunks: list[str] = []
     max_chunk_size = config("MAX_CHUNK_SIZE", cast=int, default=4096)
-    chapters = separate_into_chapters(book)
     for chapter in chapters:
         tokens, num_tokens = count_tokens(chapter)
         start_index = 0
@@ -174,7 +171,7 @@ def chunk_text(
     Split the book into chunks of the specified type.
 
     Args:
-        book (str): The book text.
+        chapters (list[str]): The list of chapter texts.
         chunk_type (ChunkMethod): The type of chunking to use.
 
     Returns:
@@ -182,10 +179,11 @@ def chunk_text(
     """
     chunks = []
     user_messages = []
+    chapters = separate_into_chapters(book)
     if chunk_type == ChunkMethod.SLIDING_WINDOW:
-        chunks, user_messages = sliding_window(book)
+        chunks, user_messages = sliding_window(chapters)
     if chunk_type == ChunkMethod.DIALOGUE_PROSE:
-        chunks, user_messages = dialogue_prose(book)
+        chunks, user_messages = dialogue_prose(chapters)
     if chunk_type == ChunkMethod.GENERATE_BEATS:
-        chunks, user_messages = generate_beats(book)
+        chunks, user_messages = generate_beats(chapters)
     return chunks, user_messages
