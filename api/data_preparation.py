@@ -43,4 +43,4 @@ def separate_into_chapters(text: str) -> list:
     """
     Separates the text into chapters
     """
-    return re.split(r"\s*\*\*\s*", text)
+    return re.split(r"\s\*\*\*\s*", text)
