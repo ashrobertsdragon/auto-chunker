@@ -1,6 +1,6 @@
 import pytest
 
-from api.chunking import (
+from chunking import (
     chunk_text,
     generate_beats,
     extract_dialogue,
