@@ -14,12 +14,11 @@ def count_tokens(text: str) -> tuple[list[int], int]:
     return tokens, num_tokens
 
 
-def adjust_to_newline(tokens: list[int], end_index: int) -> int:
+def get_end_paragraph_tokens() -> list[int]:
     """
-    Adjusts the end index to the end of the last paragraph, based on token ids
-    indicating the end of a paragraph
+    Returns the list of token ids indicating the end of a paragraph
     """
-    end_paragraph_tokens = [
+    return [
         198,
         627,
         4999,
@@ -34,6 +33,14 @@ def adjust_to_newline(tokens: list[int], end_index: int) -> int:
         7233,
         11192,
     ]
+
+
+def adjust_to_newline(tokens: list[int], end_index: int) -> int:
+    """
+    Adjusts the end index to the end of the last paragraph, based on token ids
+    indicating the end of a paragraph
+    """
+    end_paragraph_tokens = get_end_paragraph_tokens()
     while end_index > 0 and tokens[end_index - 1] not in end_paragraph_tokens:
         end_index -= 1
     return end_index
