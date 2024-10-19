@@ -1,5 +1,5 @@
 import pytest
-from api.openai_client import OpenAIAPI
+from openai_client import OpenAIAPI
 
 
 @pytest.fixture

@@ -7,8 +7,8 @@ from api.chunking import (
     dialogue_prose,
     sliding_window,
 )
-from api.chunking_method import ChunkMethod
-from api.data_preparation import separate_into_chapters, TOKENIZER
+from chunking_method import ChunkMethod
+from data_preparation import separate_into_chapters, TOKENIZER
 
 
 class TestGenerateBeats:

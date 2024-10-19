@@ -2,11 +2,12 @@ import time
 
 import pytest  # noqa F401
 
-from api.write_csv import create_csv_str
+from write_csv import create_csv_str
 
 
 class TestCreateCsvStr:
     def test_generate_csv_from_valid_data(self):
+        # sourcery skip: class-extract-method
         chunks = ["response1", "response2"]
         user_messages = ["message1", "message2"]
         role = "system"

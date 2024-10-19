@@ -2,7 +2,7 @@ import pytest
 import time
 
 
-from api.data_preparation import separate_into_chapters, count_tokens
+from data_preparation import separate_into_chapters, count_tokens
 
 
 class TestCountTokens:
@@ -101,7 +101,7 @@ class TestCountTokens:
 
 
 class TestSeparateIntoChapters:
-    def test_split_with_asterisks(self):
+    def test_split_with_asterisks(self):  # sourcery skip: class-extract-method
         text = "Chapter 1 *** Chapter 2 *** Chapter 3"
         expected = ["Chapter 1", "Chapter 2", "Chapter 3"]
         result = separate_into_chapters(text)

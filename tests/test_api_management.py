@@ -2,9 +2,9 @@ import pytest
 from openai import BadRequestError
 from openai.types.chat.chat_completion import ChatCompletion
 
-from api.api_management import call_gpt_api, error_handle, NoMessageError
+from api_management import call_gpt_api, error_handle, NoMessageError
 
-from api._proto.auto_chunker_pb2 import ChunkResponse
+from _proto.auto_chunker_pb2 import ChunkResponse
 
 
 @pytest.fixture
