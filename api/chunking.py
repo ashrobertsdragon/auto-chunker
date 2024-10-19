@@ -58,10 +58,10 @@ def extract_dialogue(paragraph: str) -> tuple[str, str]:
 
     for i, char in enumerate(paragraph):
         sentence += char
-        if char == '"':
+        if char in ['"', "'"]:
             quote_count += 1
-            in_dialogue = True if (quote_count // 2 == 1) else False
-            end_sentence = True if check_next_char is True else False
+            in_dialogue: bool = quote_count // 2 == 1
+            end_sentence: bool = check_next_char is True
             check_next_char = False
         if char in punctuation:
             if i + 1 < len(paragraph):
@@ -70,12 +70,12 @@ def extract_dialogue(paragraph: str) -> tuple[str, str]:
             end_sentence = True
         if end_sentence is True:
             if in_dialogue is False:
-                prose += sentence.strip()
+                prose += sentence
             elif in_dialogue is True:
-                dialogue += sentence.strip()
+                dialogue += sentence.strip("\"'")
             sentence = ""
             end_sentence = False
-    return prose, dialogue
+    return prose.strip(), dialogue.strip()
 
 
 def dialogue_prose(chapters: list[str]) -> tuple[list[str], list[str]]:
