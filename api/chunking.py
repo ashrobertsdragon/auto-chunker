@@ -1,14 +1,113 @@
-from itertools import islice
-
 from decouple import config
 
 from api_management import call_gpt_api
 from chunking_method import ChunkMethod
 from data_preparation import (
     count_tokens,
+    get_end_paragraph_tokens,
     separate_into_chapters,
     TOKENIZER,
 )
+
+
+PUNCTUATION: list[str] = [".", "?", "!"]
+
+
+def extract_dialogue(paragraph: str) -> tuple[str, str]:
+    """
+    Extract dialogue and prose from a paragraph.
+
+    Args:
+        paragraph (str): The paragraph text.
+
+    Returns:
+        tuple[str, str]: A tuple of dialogue and prose.
+    """
+    dialogue = str()
+    prose = str()
+    sentence = str()
+    check_next_char = False
+    end_sentence = False
+    in_dialogue = False
+    quote_count: int = 0
+
+    for i, char in enumerate(paragraph):
+        sentence += char
+        if char in ['"', "'"]:
+            quote_count += 1
+            in_dialogue: bool = quote_count // 2 == 1
+            end_sentence: bool = check_next_char is True
+            check_next_char = False
+        if char in PUNCTUATION:
+            if i + 1 < len(paragraph):
+                check_next_char = True
+                continue
+            end_sentence = True
+        if end_sentence is True:
+            if in_dialogue is False:
+                prose += sentence
+            elif in_dialogue is True:
+                dialogue += sentence.strip("\"'")
+            sentence = ""
+            end_sentence = False
+    return prose.strip(), dialogue.strip()
+
+
+def count_punctuation(dialogue: str, prose: str) -> tuple[int, int, int, int]:
+    """
+    Count the number of punctuation marks in the dialogue and prose.
+
+    Args:
+        dialogue (str): The dialogue text.
+        prose (str): The prose text.
+
+    Returns:
+        tuple[int, int, int, int]: A tuple of dialogue and prose sentence
+            counts.
+    """
+    dialogue_sentences = 0
+    prose_sentences = 0
+    for mark in PUNCTUATION:
+        dialogue_sentences += dialogue.count(mark)
+        d_sentence = "sentence" if dialogue_sentences == 1 else "sentences"
+        prose_sentences += prose.count(mark)
+        p_sentence = "sentence" if prose_sentences == 1 else "sentences"
+
+    return prose_sentences, p_sentence, dialogue_sentences, d_sentence
+
+
+def dialogue_prose(chapters: list[str]) -> tuple[list[str], list[str]]:
+    """
+    Split the book into prose and dialogue chunks.
+
+    Args:
+        chapters (list[str]): The list of chapter texts.
+
+    Returns:
+        tuple[list[str], list[str]]: A tuple of formatted chunks and user
+            messages.
+    """
+    chunks = []
+    user_messages = []
+
+    for chapter in chapters:
+        for paragraph in chapter.split("\n"):
+            dialogue, prose = extract_dialogue(paragraph)
+            dialogue_sentences, d_sentence, prose_sentences, p_sentence = (
+                count_punctuation(prose, prose)
+            )
+            if prose:
+                chunks.append(prose)
+                user_messages.append(
+                    f"Write {prose_sentences} {p_sentence} "
+                    "of description and action"
+                )
+            if dialogue:
+                chunks.append(dialogue)
+                user_messages.append(
+                    f"Write {dialogue_sentences} {d_sentence} of dialogue"
+                )
+    return chunks, user_messages
 
 
 def generate_beats(chapters: list[str]) -> tuple[list[str], list[str]]:
@@ -37,91 +136,6 @@ def generate_beats(chapters: list[str]) -> tuple[list[str], list[str]]:
     return chunk_list, user_message_list
 
 
-def extract_dialogue(paragraph: str) -> tuple[str, str]:
-    """
-    Extract dialogue and prose from a paragraph.
-
-    Args:
-        paragraph (str): The paragraph text.
-
-    Returns:
-        tuple[str, str]: A tuple of dialogue and prose.
-    """
-    dialogue = str()
-    prose = str()
-    sentence = str()
-    check_next_char = False
-    end_sentence = False
-    in_dialogue = False
-    punctuation: list[str] = [".", "?", "!"]
-    quote_count: int = 0
-
-    for i, char in enumerate(paragraph):
-        sentence += char
-        if char in ['"', "'"]:
-            quote_count += 1
-            in_dialogue: bool = quote_count // 2 == 1
-            end_sentence: bool = check_next_char is True
-            check_next_char = False
-        if char in punctuation:
-            if i + 1 < len(paragraph):
-                check_next_char = True
-                continue
-            end_sentence = True
-        if end_sentence is True:
-            if in_dialogue is False:
-                prose += sentence
-            elif in_dialogue is True:
-                dialogue += sentence.strip("\"'")
-            sentence = ""
-            end_sentence = False
-    return prose.strip(), dialogue.strip()
-
-
-def dialogue_prose(chapters: list[str]) -> tuple[list[str], list[str]]:
-    """
-    Split the book into prose and dialogue chunks.
-
-    Args:
-        chapters (list[str]): The list of chapter texts.
-
-    Returns:
-        tuple[list[str], list[str]]: A tuple of formatted chunks and user
-            messages.
-    """
-    chunks = []
-    user_messages = []
-    punctuation = [".", "?", "!"]
-
-    for chapter in chapters:
-        paragraphs = chapter.split("\n")
-        for paragraph in paragraphs:
-            prose_sentences = 0
-            dialogue_sentences = 0
-            prose, dialogue = extract_dialogue(paragraph)
-            for mark in punctuation:
-                prose_sentences += prose.count(mark)
-                p_sentence = (
-                    "sentence" if prose_sentences == 1 else "sentences"
-                )
-                dialogue_sentences += dialogue.count(mark)
-                d_sentence = (
-                    "sentence" if dialogue_sentences == 1 else "sentences"
-                )
-            if prose:
-                chunks.append(prose)
-                user_messages.append(
-                    f"Write {prose_sentences} {p_sentence} "
-                    "of description and action"
-                )
-            if dialogue:
-                chunks.append(dialogue)
-                user_messages.append(
-                    f"Write {dialogue_sentences} {d_sentence} of dialogue"
-                )
-    return chunks, user_messages
-
-
 def sliding_window(chapters: list[str]) -> tuple[list[str], list[str]]:
     """
     Split the book into chunks using a sliding window.
@@ -133,14 +147,12 @@ def sliding_window(chapters: list[str]) -> tuple[list[str], list[str]]:
         tuple[list[str], list[str]]: A tuple of formatted chunks and user
             messages.
     """
-    user_messages: list[str] = []
-    chunks: list[str] = []
+    all_chunks: list[str] = []
     max_chunk_size = config("MAX_CHUNK_SIZE", cast=int, default=4096)
+    end_paragraph_tokens = get_end_paragraph_tokens()
     for chapter in chapters:
         tokens, num_tokens = count_tokens(chapter)
-        start_index = 0
-
-        while start_index < num_tokens:
+        for start_index in range(0, num_tokens, max_chunk_size):
             end_index = min(start_index + max_chunk_size, num_tokens)
 
             if end_index < num_tokens:
@@ -148,20 +160,14 @@ def sliding_window(chapters: list[str]) -> tuple[list[str], list[str]]:
                     (
                         i
                         for i in range(end_index, start_index, -1)
-                        if tokens[i] == 10
+                        if tokens[i] in end_paragraph_tokens
                     ),
                     end_index,
                 )
 
-            chunk = TOKENIZER.decode(
-                list(islice(tokens, start_index, end_index))
-            )
-            chunks.append(chunk)
-            user_messages.append(chunk)
-
-            start_index = end_index
-
-    return chunks, user_messages
+            chunk = TOKENIZER.decode(tokens[start_index:end_index])
+            all_chunks.append(chunk)
+    return all_chunks[1:], all_chunks[:-1]
 
 
 def chunk_text(
@@ -177,13 +183,13 @@ def chunk_text(
     Returns:
         tuple[list, list]: A tuple of formatted chunks and user messages.
     """
-    chunks = []
-    user_messages = []
-    chapters = separate_into_chapters(book)
-    if chunk_type == ChunkMethod.SLIDING_WINDOW:
-        chunks, user_messages = sliding_window(chapters)
-    if chunk_type == ChunkMethod.DIALOGUE_PROSE:
-        chunks, user_messages = dialogue_prose(chapters)
-    if chunk_type == ChunkMethod.GENERATE_BEATS:
-        chunks, user_messages = generate_beats(chapters)
-    return chunks, user_messages
+    chapters: list[str] = separate_into_chapters(book)
+    chunk_map = {
+        ChunkMethod.DIALOGUE_PROSE: dialogue_prose,
+        ChunkMethod.GENERATE_BEATS: generate_beats,
+        ChunkMethod.SLIDING_WINDOW: sliding_window,
+    }
+    if chunk_type not in chunk_map:
+        raise ValueError(f"Chunk method {chunk_type} not supported")
+    chunking_func = chunk_map[chunk_type]
+    return chunking_func(chapters)
