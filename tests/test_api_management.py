@@ -1,6 +1,6 @@
 import pytest
 from openai import BadRequestError
-from openai.types import ChatCompletionResponse
+from openai.types.chat.chat_completion import ChatCompletion
 
 from api.api_management import call_gpt_api, error_handle, NoMessageError
 
@@ -24,7 +24,7 @@ def mock_custom_error():
 def fake_client():
     class FakeClient:
         def call_api(self, messages):
-            return ChatCompletionResponse(
+            return ChatCompletion(
                 choices=[{"message": {"content": "Generated content"}}]
             )
 
@@ -35,15 +35,14 @@ def fake_client():
 def fake_client_without_response():
     class FakeClient:
         def call_api(self, messages):
-            return ChatCompletionResponse(
-                choices=[{"message": {"content": ""}}]
-            )
+            return ChatCompletion(choices=[{"message": {"content": ""}}])
 
     return FakeClient()
 
 
 class TestErrorHandle:
     def test_unresolvable_error_handling(self, mocker, mock_error):
+        # sourcery skip: class-extract-method
         result = error_handle(mock_error)
         assert isinstance(result, ChunkResponse)
         assert "A critical error has occurred" in result.status_message

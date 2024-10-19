@@ -1,6 +1,6 @@
 from decouple import config
 from openai import OpenAI
-from openai.types import ChatCompletionResponse
+from openai.types.chat.chat_completion import ChatCompletion
 
 
 class OpenAIAPI:
@@ -11,7 +11,7 @@ class OpenAIAPI:
         self.max_tokens = config("MAX_TOKENS", cast=int, default=4096)
         self.temperature = config("TEMPERATURE", cast=float, default=0.7)
 
-    def call_api(self, messages: list[dict]) -> ChatCompletionResponse:
+    def call_api(self, messages: list[dict]) -> ChatCompletion:
         return self.client.chat.completions.create(
             model=self.model,
             messages=messages,
