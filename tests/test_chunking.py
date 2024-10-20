@@ -7,7 +7,7 @@ from chunking import (
     dialogue_prose,
     sliding_window,
 )
-from chunking_method import ChunkingMethodhod
+from chunking_method import ChunkingMethod
 from data_preparation import separate_into_chapters, TOKENIZER
 
 
@@ -467,7 +467,7 @@ class TestChunkText:
             return_value=expected_chapters,
         )
 
-        chapters, _ = chunk_text(book, ChunkingMethodhod.DIALOGUE_PROSE)
+        chapters, _ = chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
 
         separate_into_chapters.assert_called_once_with(book)
         assert chapters == expected_chapters
@@ -478,7 +478,7 @@ class TestChunkText:
             "api.chunking.dialogue_prose", return_value=([], [])
         )
 
-        chunk_text(book, ChunkingMethodhod.DIALOGUE_PROSE)
+        chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
 
         mock_func.assert_called_once()
 
@@ -495,7 +495,7 @@ class TestChunkText:
         )
 
         chapters, user_messages = chunk_text(
-            book, ChunkingMethodhod.DIALOGUE_PROSE
+            book, ChunkingMethod.DIALOGUE_PROSE
         )
 
         assert chapters == []
@@ -521,13 +521,13 @@ class TestChunkText:
             "api.chunking.sliding_window", return_value=([], [])
         )
 
-        chunk_text(book, ChunkingMethodhod.DIALOGUE_PROSE)
+        chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
         mock_dialogue_prose.assert_called_once_with(expected_chapters)
 
-        chunk_text(book, ChunkingMethodhod.GENERATE_BEATS)
+        chunk_text(book, ChunkingMethod.GENERATE_BEATS)
         mock_generate_beats.assert_called_once_with(expected_chapters)
 
-        chunk_text(book, ChunkingMethodhod.SLIDING_WINDOW)
+        chunk_text(book, ChunkingMethod.SLIDING_WINDOW)
         mock_sliding_window.assert_called_once_with(expected_chapters)
 
     def test_returns_two_lists(self, mocker):
@@ -538,7 +538,7 @@ class TestChunkText:
             return_value=expected_chapters,
         )
 
-        result = chunk_text(book, ChunkingMethodhod.DIALOGUE_PROSE)
+        result = chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
 
         separate_into_chapters.assert_called_once_with(book)
         assert isinstance(result, tuple)
@@ -555,7 +555,7 @@ class TestChunkText:
             return_value=expected_chapters,
         )
 
-        chapters, _ = chunk_text(book, ChunkingMethodhod.DIALOGUE_PROSE)
+        chapters, _ = chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
 
         separate_into_chapters.assert_called_once_with(book)
         assert chapters == expected_chapters
@@ -573,6 +573,6 @@ class TestChunkText:
             return_value=(expected_chapters, ["Some user message"]),
         )
 
-        _, user_messages = chunk_text(book, ChunkingMethodhod.DIALOGUE_PROSE)
+        _, user_messages = chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
 
         assert user_messages == ["Some user message"]
