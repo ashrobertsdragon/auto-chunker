@@ -52,7 +52,7 @@ class TestErrorHandle:
             pass
 
         mock_error = CustomError("Custom error without response")
-        with mocker.patch("api.api_management.time.sleep"):
+        with mocker.patch("api_management.time.sleep"):
             result = error_handle(mock_error)
         assert isinstance(result, int)
         assert result == 1
@@ -94,12 +94,12 @@ class TestErrorHandle:
         )
 
     def test_replicate_increment_retry_count(self, mocker, mock_custom_error):
-        with mocker.patch("api.api_management.time.sleep"):
+        with mocker.patch("api_management.time.sleep"):
             result = error_handle(mock_custom_error, retry_count=2)
         assert result == 3
 
     def test_exponential_backoff_in_retry(self, mocker, mock_custom_error):
-        with mocker.patch("api.api_management.time.sleep") as mock_sleep:
+        with mocker.patch("api_management.time.sleep") as mock_sleep:
             error_handle(mock_custom_error, retry_count=3)
 
         mock_sleep.assert_called_once_with(11)
