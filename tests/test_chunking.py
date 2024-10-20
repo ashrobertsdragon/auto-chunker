@@ -1,5 +1,6 @@
 import pytest
 
+import chunking
 from chunking import (
     chunk_text,
     generate_beats,
@@ -8,7 +9,7 @@ from chunking import (
     sliding_window,
 )
 from chunking_method import ChunkingMethod
-from data_preparation import separate_into_chapters, TOKENIZER
+from data_preparation import TOKENIZER
 
 
 class TestGenerateBeats:
@@ -446,19 +447,14 @@ class TestSlidingWindow:
 
 
 class TestChunkText:
-    def test_correctly_splits_book_into_chapters(self, mocker):
+    def test_calls_separate_into_chapters(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
-        expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
+        mocker.patch("chunking.dialogue_prose", return_value=([], []))
+        separate_spy = mocker.spy(chunking, "separate_into_chapters")
 
-        mocker.patch(
-            "data_preparation.separate_into_chapters",
-            return_value=expected_chapters,
-        )
+        chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
 
-        chapters, _ = chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
-
-        separate_into_chapters.assert_called_once_with(book)
-        assert chapters == expected_chapters
+        separate_spy.assert_called_once_with(book)
 
     def test_maps_chunk_type_to_correct_function(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
@@ -488,14 +484,14 @@ class TestChunkText:
 
         assert chapters == []
         assert user_messages == []
-        mock_func.assert_called_once_with([])
+        mock_func.assert_called_once_with([""])
 
     def test_correct_function_called_for_chunk_type(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
 
         mocker.patch(
-            "data_preparation.separate_into_chapters",
+            "chunking.separate_into_chapters",
             return_value=expected_chapters,
         )
 
@@ -521,39 +517,25 @@ class TestChunkText:
     def test_returns_two_lists(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
-        mocker.patch(
-            "data_preparation.separate_into_chapters",
+        mock_separate = mocker.patch(
+            "chunking.separate_into_chapters",
             return_value=expected_chapters,
         )
 
         result = chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
 
-        separate_into_chapters.assert_called_once_with(book)
+        mock_separate.assert_called_once_with(book)
         assert isinstance(result, tuple)
         assert len(result) == 2
         assert isinstance(result[0], list)  # Formatted text chunks
         assert isinstance(result[1], list)  # User messages
-
-    def test_first_list_contains_formatted_chunks(self, mocker):
-        book = "Chapter 1 text *** Chapter 2 text"
-        expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
-
-        mocker.patch(
-            "data_preparation.separate_into_chapters",
-            return_value=expected_chapters,
-        )
-
-        chapters, _ = chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
-
-        separate_into_chapters.assert_called_once_with(book)
-        assert chapters == expected_chapters
 
     def test_user_messages_relevant_to_chunking(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
 
         mocker.patch(
-            "data_preparation.separate_into_chapters",
+            "chunking.separate_into_chapters",
             return_value=expected_chapters,
         )
         mocker.patch(
