@@ -1,3 +1,4 @@
+import httpx
 import pytest
 from openai import BadRequestError
 from openai.types.chat.chat_completion import ChatCompletion
@@ -9,7 +10,16 @@ from _proto.auto_chunker_pb2 import ChunkResponse
 
 @pytest.fixture
 def mock_error():
-    return BadRequestError("Bad request")
+    return BadRequestError(
+        "Bad request",
+        response=httpx.Response(
+            400,
+            request=httpx.Request(
+                "GET", "https://api.openai.com/v1/chat/completions"
+            ),
+        ),
+        body={"error": {"message": "A critical error has occurred"}},
+    )
 
 
 @pytest.fixture
@@ -52,8 +62,8 @@ class TestErrorHandle:
             pass
 
         mock_error = CustomError("Custom error without response")
-        with mocker.patch("api_management.time.sleep"):
-            result = error_handle(mock_error)
+        mocker.patch("api_management.time.sleep")
+        result = error_handle(mock_error)
         assert isinstance(result, int)
         assert result == 1
 
@@ -94,8 +104,8 @@ class TestErrorHandle:
         )
 
     def test_replicate_increment_retry_count(self, mocker, mock_custom_error):
-        with mocker.patch("api_management.time.sleep"):
-            result = error_handle(mock_custom_error, retry_count=2)
+        mocker.patch("api_management.time.sleep")
+        result = error_handle(mock_custom_error, retry_count=2)
         assert result == 3
 
     def test_exponential_backoff_in_retry(self, mocker, mock_custom_error):
