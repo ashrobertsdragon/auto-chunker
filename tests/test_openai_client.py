@@ -1,13 +1,17 @@
 import pytest
+from openai._exceptions import OpenAIError
+
 from openai_client import OpenAIAPI
 
 
 @pytest.fixture
 def mock_config(mocker):
     return mocker.patch(
-        "api.openai_client.config",
+        "openai_client.config",
         side_effect=lambda key, **kwargs: {
             "OPENAI_API_KEY": "test_key",
+            "OPENAI_ORG_ID": "test_org",
+            "OPENAI_PROJECT_ID": "test_project",
             "OPENAI_MODEL": "test_model",
             "MAX_TOKENS": 2048,
             "TEMPERATURE": 0.5,
@@ -17,17 +21,23 @@ def mock_config(mocker):
 
 @pytest.fixture
 def openai_api(mocker, mock_config):
-    class FakeChatCompletion:
+    class FakeCompletions:
         def create(self, model, messages, max_tokens, temperature):
             return {"choices": [{"message": {"content": "response"}}]}
 
-    class FakeOpenAI:
-        def __init__(self, api_key):
-            self.api_key = api_key
-            self.chat = FakeChatCompletion()
+    class FakeChat:
+        def __init__(self):
+            self.completions = FakeCompletions()
 
-    with mocker.patch("api.openai_client.OpenAI", FakeOpenAI):
-        return OpenAIAPI()
+    class FakeOpenAI:
+        def __init__(self, api_key, organization, project):
+            self.api_key = api_key
+            self.organization = organization
+            self.project = project
+            self.chat = FakeChat()
+
+    mocker.patch("openai_client.OpenAI", FakeOpenAI)
+    return OpenAIAPI()
 
 
 class TestOpenAIAPI:
@@ -45,19 +55,52 @@ class TestOpenAIAPI:
     def test_missing_or_invalid_api_key(self, mock_config):
         mock_config.side_effect = lambda key, **kwargs: {
             "OPENAI_API_KEY": None,
+            "OPENAI_PROJECT_ID": "test_project",
             "OPENAI_MODEL": "test_model",
             "MAX_TOKENS": 2048,
             "TEMPERATURE": 0.5,
         }.get(key, kwargs.get("default"))
 
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(OpenAIError) as exc_info:
             OpenAIAPI()
 
-        assert "API key is missing or invalid" in str(exc_info.value)
+        assert "OPENAI_API_KEY not set" in str(exc_info.value)
+
+    def test_missing_or_invalid_project_id(self, mock_config):
+        mock_config.side_effect = lambda key, **kwargs: {
+            "OPENAI_API_KEY": "test_key",
+            "OPENAI_ORG_ID": "test_org",
+            "OPENAI_PROJECT_ID": None,
+            "OPENAI_MODEL": "test_model",
+            "MAX_TOKENS": 2048,
+            "TEMPERATURE": 0.5,
+        }.get(key, kwargs.get("default"))
+
+        with pytest.raises(OpenAIError) as exc_info:
+            OpenAIAPI()
+
+        assert "OPENAI_PROJECT_ID not set" in str(exc_info.value)
+
+    def test_missing_or_invalid_org_id(self, mock_config):
+        mock_config.side_effect = lambda key, **kwargs: {
+            "OPENAI_API_KEY": "test_key",
+            "OPENAI_ORG_ID": None,
+            "OPENAI_PROJECT_ID": "test_project",
+            "OPENAI_MODEL": "test_model",
+            "MAX_TOKENS": 2048,
+            "TEMPERATURE": 0.5,
+        }.get(key, kwargs.get("default"))
+
+        with pytest.raises(OpenAIError) as exc_info:
+            OpenAIAPI()
+
+        assert "OPENAI_ORG_ID not set" in str(exc_info.value)
 
     def test_default_values_for_max_tokens_and_temperature(self, mock_config):
         mock_config.side_effect = lambda key, **kwargs: {
             "OPENAI_API_KEY": "test_key",
+            "OPENAI_ORG_ID": "test_org",
+            "OPENAI_PROJECT_ID": "test_project",
             "OPENAI_MODEL": "test_model",
         }.get(key, kwargs.get("default"))
 
