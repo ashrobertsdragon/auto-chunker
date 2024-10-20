@@ -6,7 +6,7 @@ from openai.types.chat.chat_completion import ChatCompletion
 class OpenAIAPI:
     def __init__(self):
         api_key = config("OPENAI_API_KEY")
-        self.client = OpenAI(api_key)
+        self.client = OpenAI(api_key=api_key)
         self.model = config("OPENAI_MODEL")
         self.max_tokens = config("MAX_TOKENS", cast=int, default=4096)
         self.temperature = config("TEMPERATURE", cast=float, default=0.7)
