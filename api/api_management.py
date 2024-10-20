@@ -61,8 +61,8 @@ def error_handle(e: Any, retry_count: int = 0) -> int | ChunkResponse:
             error_message = json_data.get("error", {}).get(
                 "message", "Unknown error"
             )
-        else:
-            error_message = str(e)
+    else:
+        error_message = str(e)
 
     logger.error(
         f"{e}. Error code: {error_code}. Error message: {error_message}"
