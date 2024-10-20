@@ -6,10 +6,10 @@ from openai.types.chat.chat_completion import ChatCompletion
 
 class OpenAIAPI:
     def __init__(self):
-        api_key: str = config("OPENAI_API_KEY")
-        organization: str = config("OPENAI_ORG_ID")
-        project: str = config("OPENAI_PROJECT_ID")
-        self.model: str = config("OPENAI_MODEL")
+        api_key: str = config("OPENAI_API_KEY", default=None)
+        organization: str = config("OPENAI_ORG_ID", default=None)
+        project: str = config("OPENAI_PROJECT_ID", default=None)
+        self.model: str = config("OPENAI_MODEL", default="gpt-4o-mini")
         self.max_tokens: int = config("MAX_TOKENS", cast=int, default=4096)
         self.temperature: float = config(
             "TEMPERATURE", cast=float, default=0.7
