@@ -1,7 +1,7 @@
 from decouple import config
 
 from api_management import call_gpt_api
-from chunking_method import ChunkMethod
+from chunking_method import ChunkingMethod
 from data_preparation import (
     count_tokens,
     get_end_paragraph_tokens,
@@ -171,23 +171,23 @@ def sliding_window(chapters: list[str]) -> tuple[list[str], list[str]]:
 
 
 def chunk_text(
-    book: str, chunk_type: ChunkMethod
+    book: str, chunk_type: ChunkingMethod
 ) -> tuple[list[str], list[str]]:
     """
     Split the book into chunks of the specified type.
 
     Args:
         chapters (list[str]): The list of chapter texts.
-        chunk_type (ChunkMethod): The type of chunking to use.
+        chunk_type (ChunkingMethod): The type of chunking to use.
 
     Returns:
         tuple[list, list]: A tuple of formatted chunks and user messages.
     """
     chapters: list[str] = separate_into_chapters(book)
     chunk_map = {
-        ChunkMethod.DIALOGUE_PROSE: dialogue_prose,
-        ChunkMethod.GENERATE_BEATS: generate_beats,
-        ChunkMethod.SLIDING_WINDOW: sliding_window,
+        ChunkingMethod.DIALOGUE_PROSE: dialogue_prose,
+        ChunkingMethod.GENERATE_BEATS: generate_beats,
+        ChunkingMethod.SLIDING_WINDOW: sliding_window,
     }
     if chunk_type not in chunk_map:
         raise ValueError(f"Chunk method {chunk_type} not supported")
