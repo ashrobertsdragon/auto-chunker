@@ -48,7 +48,6 @@ def error_handle(e: Any, retry_count: int = 0) -> int | ChunkResponse:
         ChunkResponse: the API response body with status message instead of
             JSONL
     """
-
     error_image = (
         '<img src="/static/alert-light.png" alt="error icon" id="endError">'
     )
@@ -78,6 +77,7 @@ def error_handle(e: Any, retry_count: int = 0) -> int | ChunkResponse:
             "The administrator has been contacted. "
             "Sorry for the inconvenience"
         )
+
         return ChunkResponse(jsonl_content="", status_message=error_message)
 
     retry_count += 1
@@ -93,6 +93,7 @@ def error_handle(e: Any, retry_count: int = 0) -> int | ChunkResponse:
     else:
         sleep_time = (5 - retry_count) + (retry_count**2)
         time.sleep(sleep_time)
+
     return retry_count
 
 
@@ -100,7 +101,7 @@ def call_gpt_api(
     prompt: str,
     client=CLIENT,
     retry_count: int = 0,
-) -> str:
+) -> str | ChunkResponse:
     """
     Makes API calls to the OpenAI ChatCompletions engine.
 
@@ -109,7 +110,9 @@ def call_gpt_api(
         retry_count (int): The number of retry attempts. Defaults to 0.
 
     Returns:
-        str: The generated content from the OpenAI GPT-3 model.
+        str: The generated content from the OpenAI GPT-4o Mini model.
+        ChunkResponse: The API response body with status message instead of
+            JSONL if the API call fails.
     """
 
     role_script = "You are an expert developmental editor who specializes in "
@@ -129,6 +132,8 @@ def call_gpt_api(
             raise NoMessageError("No message content found")
 
     except tuple([NoMessageError] + unresolvable_errors()) as e:
-        retry_count = error_handle(e=e, retry_count=retry_count)
+        retry_or_error = error_handle(e=e, retry_count=retry_count)
+        if retry_or_error.status_message:
+            return retry_or_error
         answer = call_gpt_api(prompt, client, retry_count)
     return answer
