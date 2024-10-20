@@ -1,7 +1,7 @@
 import httpx
 import pytest
 from openai import BadRequestError
-from openai.types.chat.chat_completion import ChatCompletion
+from openai.types.chat.chat_completion import ChatCompletion, Choice
 
 from api_management import call_gpt_api, error_handle, NoMessageError
 
@@ -35,7 +35,20 @@ def fake_client():
     class FakeClient:
         def call_api(self, messages):
             return ChatCompletion(
-                choices=[{"message": {"content": "Generated content"}}]
+                id="chatcmpl-123456",
+                choices=[
+                    Choice(
+                        finish_reason="stop",
+                        index=0,
+                        message={
+                            "role": "assistant",
+                            "content": "Generated content",
+                        },
+                    )
+                ],
+                created=1728933352,
+                model="gpt-4o-mini",
+                object="chat.completion",
             )
 
     return FakeClient()
@@ -45,7 +58,21 @@ def fake_client():
 def fake_client_without_response():
     class FakeClient:
         def call_api(self, messages):
-            return ChatCompletion(choices=[{"message": {"content": ""}}])
+            return ChatCompletion(
+                id="chatcmpl-123456",
+                choices=[
+                    Choice(
+                        finish_reason="stop",
+                        index=0,
+                        message={
+                            "role": "assistant",
+                        },
+                    )
+                ],
+                created=1728933352,
+                model="gpt-4o-mini",
+                object="chat.completion",
+            )
 
     return FakeClient()
 
@@ -109,10 +136,17 @@ class TestErrorHandle:
         assert result == 3
 
     def test_exponential_backoff_in_retry(self, mocker, mock_custom_error):
-        with mocker.patch("api_management.time.sleep") as mock_sleep:
-            error_handle(mock_custom_error, retry_count=3)
+        mock_sleep = mocker.patch("api_management.time.sleep")
 
-        mock_sleep.assert_called_once_with(11)
+        error_handle(mock_custom_error, retry_count=3)
+
+        mock_sleep.assert_called_once_with(17)
+
+    def test_max_retry_count_exceeded(self, mocker, mock_custom_error):
+        mocker.patch("api_management.time.sleep")
+        result = error_handle(mock_custom_error, retry_count=5)
+        assert isinstance(result, ChunkResponse)
+        assert "A critical error has occurred" in result.status_message
 
 
 class TestCallGptApi:
@@ -125,29 +159,50 @@ class TestCallGptApi:
         self, mocker, fake_client_without_response
     ):
         prompt = "Test prompt"
-        with mocker.patch(
-            "error_handle", return_value="Second Attempt"
-        ) as mock_error_handle:
-            call_gpt_api(prompt, client=fake_client_without_response)
-        mock_error_handle.assert_called_once()
-        assert isinstance(mock_error_handle.call_args.args[0], NoMessageError)
+        mock_error_handle = mocker.patch(
+            "api_management.error_handle",
+            return_value=ChunkResponse(
+                jsonl_content="",
+                status_message="A critical error has occurred. Administrator has been contacted.",
+            ),
+        )
+
+        call_gpt_api(prompt, client=fake_client_without_response)
+
+        assert isinstance(
+            mock_error_handle.call_args.kwargs["e"], NoMessageError
+        )
 
     def test_default_retry_count(self, mocker, fake_client_without_response):
         prompt = "Test prompt"
-        with mocker.patch(
-            "error_handle", return_value="Second Attempt"
-        ) as mock_error_handle:
-            call_gpt_api(prompt, client=fake_client_without_response)
-        assert mock_error_handle.call_args.args[1] == 1
+        mocker.patch("api_management.time.sleep")
+        mock_error_handle = mocker.patch(
+            "api_management.error_handle",
+            return_value=ChunkResponse(
+                jsonl_content="",
+                status_message="A critical error has occurred. Administrator has been contacted.",
+            ),
+        )
 
-    def test_call_gpt_api_retry_count_incremented(
+        call_gpt_api(prompt, client=fake_client_without_response)
+
+        assert mock_error_handle.call_args.kwargs["retry_count"] == 0
+
+    def test_call_gpt_api_returns_chunk_response_after_5_retries(
         self, mocker, fake_client_without_response
     ):
         prompt = "Test prompt"
-        with mocker.patch(
-            "error_handle", return_value="Second Attempt"
-        ) as mock_error_handle:
-            call_gpt_api(
-                prompt, client=fake_client_without_response, retry_count=1
-            )
-        assert mock_error_handle.call_args.args[1] == 2
+        mocker.patch(
+            "api_management.error_handle",
+            return_value=ChunkResponse(
+                jsonl_content="",
+                status_message="A critical error has occurred. Administrator has been contacted.",
+            ),
+        )
+
+        result = call_gpt_api(
+            prompt, client=fake_client_without_response, retry_count=5
+        )
+
+        assert isinstance(result, ChunkResponse)
+        assert "A critical error has occurred" in result.status_message
