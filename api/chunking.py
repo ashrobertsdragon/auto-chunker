@@ -148,7 +148,7 @@ def sliding_window(chapters: list[str]) -> tuple[list[str], list[str]]:
             messages.
     """
     all_chunks: list[str] = []
-    max_chunk_size = config("MAX_CHUNK_SIZE", cast=int, default=4096)
+    max_chunk_size = config("MAX_TOKENS", cast=int, default=4096)
     end_paragraph_tokens = get_end_paragraph_tokens()
     for chapter in chapters:
         tokens, num_tokens = count_tokens(chapter)
