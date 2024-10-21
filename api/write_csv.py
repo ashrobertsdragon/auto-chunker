@@ -17,7 +17,9 @@ def create_csv_str(
         str: The CSV file.
     """
     csv_buffer = io.StringIO()
-    csv_writer = csv.writer(csv_buffer, quoting=csv.QUOTE_ALL)
+    csv_writer = csv.writer(
+        csv_buffer, quoting=csv.QUOTE_ALL, lineterminator="\n"
+    )
 
     for message, chunk in zip(user_messages, chunks):
         csv_writer.writerow([role, message, chunk])
