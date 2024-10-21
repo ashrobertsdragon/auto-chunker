@@ -88,8 +88,6 @@ def count_sentences(dialogue: str, prose: str) -> tuple[int, str, int, str]:
     dialogue_sentences = count_sentence_endings(dialogue)
     prose_sentences = count_sentence_endings(prose)
 
-    print(f"Dialogue sentences: {dialogue_sentences} for {dialogue}")
-    print(f"Prose sentences: {prose_sentences} for {prose}")
     d_sentence: str = "sentence" if dialogue_sentences == 1 else "sentences"
     p_sentence: str = "sentence" if prose_sentences == 1 else "sentences"
 
