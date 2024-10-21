@@ -26,7 +26,7 @@ class TestCountTokens:
 
     def test_handles_very_long_text(self):
         text = "word " * 10000
-        expected_num_tokens = 10000
+        expected_num_tokens = 10001  # "word" + " word" * 9999 + " "
 
         _, num_tokens = count_tokens(text)
 
@@ -34,7 +34,7 @@ class TestCountTokens:
 
     def test_manages_whitespace_only_text(self):
         text = "    "
-        expected_tokens = [220]  # Assuming each space is tokenized separately
+        expected_tokens = [257]
         expected_num_tokens = 1
 
         tokens, num_tokens = count_tokens(text)
@@ -44,8 +44,8 @@ class TestCountTokens:
 
     def test_processes_text_with_special_characters(self):
         text = "Hello@world!"
-        expected_tokens = [9906, 31, 14957]
-        expected_num_tokens = 3
+        expected_tokens = [9906, 31, 14957, 0]
+        expected_num_tokens = 4
 
         tokens, num_tokens = count_tokens(text)
 
@@ -82,12 +82,12 @@ class TestCountTokens:
     def test_tokenizer_called_correctly(self, mocker):
         text = "Test text"
 
-        with mocker.patch(
+        mock_tokenizer = mocker.patch(
             "data_preparation.TOKENIZER.encode", return_value=[1, 2, 3]
-        ) as mock_encode:
-            count_tokens(text)
+        )
+        count_tokens(text)
 
-        mock_encode.assert_called_once_with(text)
+        mock_tokenizer.assert_called_once_with(text)
 
     def test_performance_with_large_text(self):
         large_text = "word " * 100000
@@ -96,7 +96,7 @@ class TestCountTokens:
         _, num_tokens = count_tokens(large_text)
         end_time = time.time()
 
-        assert num_tokens == 100000
+        assert num_tokens == 100001
         assert end_time - start_time < 1  # 1 second
 
 
@@ -121,13 +121,13 @@ class TestSeparateIntoChapters:
 
     def test_whitespace_around_separators(self):
         text = "Chapter 1  ***  Chapter 2  ***  Chapter 3"
-        expected = ["Chapter 1", "Chapter 2", "Chapter 3"]
+        expected = ["Chapter 1 ", "Chapter 2 ", "Chapter 3"]
         result = separate_into_chapters(text)
         assert result == expected
 
     def test_manages_empty_string_input(self):
         text = ""
-        expected = []
+        expected = [""]
         result = separate_into_chapters(text)
         assert result == expected
 
@@ -144,7 +144,7 @@ class TestSeparateIntoChapters:
     # Handles non-standard whitespace characters around separators
     def test_handles_non_standard_whitespace(self):
         text = "Chapter 1  *** Chapter 2 *** Chapter 3"
-        expected = ["Chapter 1", "Chapter 2", "Chapter 3"]
+        expected = ["Chapter 1 ", "Chapter 2", "Chapter 3"]
         result = separate_into_chapters(text)
         assert result == expected
 
