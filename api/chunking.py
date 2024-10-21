@@ -1,3 +1,5 @@
+import re
+
 from decouple import config
 
 from api_management import call_gpt_api
@@ -54,9 +56,25 @@ def extract_dialogue(paragraph: str) -> tuple[str, str]:
     return clean_dialogue, clean_prose
 
 
-def count_punctuation(dialogue: str, prose: str) -> tuple[int, str, int, str]:
+def count_sentence_endings(text: str) -> int:
     """
-    Count the number of punctuation marks in the dialogue and prose.
+    Count the number of sentence endings in the text.
+    The regex
+
+    Args:
+        text (str): The text to search for sentences.
+
+    Returns:
+        int: The number of sentences in the text or 1 if there are none.
+    """
+    safe_punctuation = "".join(re.escape(mark) for mark in PUNCTUATION)
+    sentence_endings = re.findall(rf"[{safe_punctuation}]+(?=\s|$)", text)
+    return max(len(sentence_endings), 1)
+
+
+def count_sentences(dialogue: str, prose: str) -> tuple[int, str, int, str]:
+    """
+    Count the number of sentences in the dialogue and prose.
 
     Args:
         dialogue (str): The dialogue text.
@@ -67,17 +85,12 @@ def count_punctuation(dialogue: str, prose: str) -> tuple[int, str, int, str]:
             counts and whether to use singular or plural version of the word
             'sentence'.
     """
-    dialogue_sentences: int = 0
-    prose_sentences: int = 0
-    for mark in PUNCTUATION:
-        dialogue_sentences += dialogue.count(mark)
-        prose_sentences += prose.count(mark)
+    dialogue_sentences = count_sentence_endings(dialogue)
+    prose_sentences = count_sentence_endings(prose)
 
-    dialogue_sentences = 1 if dialogue_sentences == 0 else dialogue_sentences
-
-    prose_sentences = 1 if prose_sentences == 0 else prose_sentences
+    print(f"Dialogue sentences: {dialogue_sentences} for {dialogue}")
+    print(f"Prose sentences: {prose_sentences} for {prose}")
     d_sentence: str = "sentence" if dialogue_sentences == 1 else "sentences"
-
     p_sentence: str = "sentence" if prose_sentences == 1 else "sentences"
 
     return dialogue_sentences, d_sentence, prose_sentences, p_sentence
@@ -101,7 +114,7 @@ def dialogue_prose(chapters: list[str]) -> tuple[list[str], list[str]]:
         for paragraph in chapter.split("\n"):
             dialogue, prose = extract_dialogue(paragraph)
             dialogue_sentences, d_sentence, prose_sentences, p_sentence = (
-                count_punctuation(dialogue, prose)
+                count_sentences(dialogue, prose)
             )
             if dialogue:
                 chunks.append(dialogue)
