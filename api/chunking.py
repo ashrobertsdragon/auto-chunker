@@ -23,34 +23,32 @@ def extract_dialogue(paragraph: str) -> tuple[str, str]:
     Returns:
         tuple[str, str]: A tuple of dialogue and prose.
     """
-    dialogue = str()
-    prose = str()
-    sentence = str()
-    check_next_char = False
-    end_sentence = False
+    dialogue, prose = [], []
+    current_text = []
     in_dialogue = False
-    quote_count: int = 0
 
-    for i, char in enumerate(paragraph):
-        sentence += char
-        if char in ['"', "'"]:
-            quote_count += 1
-            in_dialogue: bool = quote_count // 2 == 1
-            end_sentence: bool = check_next_char is True
-            check_next_char = False
-        if char in PUNCTUATION:
-            if i + 1 < len(paragraph):
-                check_next_char = True
-                continue
-            end_sentence = True
-        if end_sentence is True:
-            if in_dialogue is False:
-                prose += sentence
-            elif in_dialogue is True:
-                dialogue += sentence.strip("\"'")
-            sentence = ""
-            end_sentence = False
-    return prose.strip(), dialogue.strip()
+    for char in paragraph:
+        if char == '"':
+            if in_dialogue:
+                dialogue.append("".join(current_text).strip())
+            else:
+                prose.append("".join(current_text).strip())
+            in_dialogue = not in_dialogue
+            current_text = []
+        elif char == ",":
+            current_text.append(", ")
+        else:
+            current_text.append(char)
+
+    if in_dialogue:
+        dialogue.append("".join(current_text).strip())
+    else:
+        prose.append("".join(current_text).strip())
+
+    clean_prose = " ".join(prose).replace("  ", " ").strip()
+    clean_dialogue = " ".join(dialogue).replace("  ", " ").strip()
+
+    return clean_prose, clean_dialogue
 
 
 def count_punctuation(dialogue: str, prose: str) -> tuple[int, int, int, int]:
