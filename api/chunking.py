@@ -48,10 +48,10 @@ def extract_dialogue(paragraph: str) -> tuple[str, str]:
     clean_prose = " ".join(prose).replace("  ", " ").strip()
     clean_dialogue = " ".join(dialogue).replace("  ", " ").strip()
 
-    return clean_prose, clean_dialogue
+    return clean_dialogue, clean_prose
 
 
-def count_punctuation(dialogue: str, prose: str) -> tuple[int, int, int, int]:
+def count_punctuation(dialogue: str, prose: str) -> tuple[int, str, int, str]:
     """
     Count the number of punctuation marks in the dialogue and prose.
 
@@ -60,18 +60,20 @@ def count_punctuation(dialogue: str, prose: str) -> tuple[int, int, int, int]:
         prose (str): The prose text.
 
     Returns:
-        tuple[int, int, int, int]: A tuple of dialogue and prose sentence
-            counts.
+        tuple[int, str, int, str]: A tuple of dialogue and prose sentence
+            counts and whether to use singular or plural version of the word
+            'sentence'.
     """
     dialogue_sentences = 0
     prose_sentences = 0
     for mark in PUNCTUATION:
         dialogue_sentences += dialogue.count(mark)
-        d_sentence = "sentence" if dialogue_sentences == 1 else "sentences"
         prose_sentences += prose.count(mark)
-        p_sentence = "sentence" if prose_sentences == 1 else "sentences"
+    d_sentence = "sentence" if dialogue_sentences == 1 else "sentences"
 
-    return prose_sentences, p_sentence, dialogue_sentences, d_sentence
+    p_sentence = "sentence" if prose_sentences == 1 else "sentences"
+
+    return dialogue_sentences, d_sentence, prose_sentences, p_sentence
 
 
 def dialogue_prose(chapters: list[str]) -> tuple[list[str], list[str]]:
@@ -92,18 +94,18 @@ def dialogue_prose(chapters: list[str]) -> tuple[list[str], list[str]]:
         for paragraph in chapter.split("\n"):
             dialogue, prose = extract_dialogue(paragraph)
             dialogue_sentences, d_sentence, prose_sentences, p_sentence = (
-                count_punctuation(prose, prose)
+                count_punctuation(dialogue, prose)
             )
+            if dialogue:
+                chunks.append(dialogue)
+                user_messages.append(
+                    f"Write {dialogue_sentences} {d_sentence} of dialogue"
+                )
             if prose:
                 chunks.append(prose)
                 user_messages.append(
                     f"Write {prose_sentences} {p_sentence} "
                     "of description and action"
-                )
-            if dialogue:
-                chunks.append(dialogue)
-                user_messages.append(
-                    f"Write {dialogue_sentences} {d_sentence} of dialogue"
                 )
     return chunks, user_messages
 
