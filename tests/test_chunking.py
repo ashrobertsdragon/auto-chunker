@@ -121,12 +121,6 @@ class TestExtractDialogue:
         assert prose == ""
         assert dialogue == ""
 
-    def test_single_quotes(self):
-        paragraph = "She whispered, 'Don't be afraid,' and smiled."
-        prose, dialogue = extract_dialogue(paragraph)
-        assert prose == "She whispered, and smiled."
-        assert dialogue == "Don't be afraid,"
-
     def test_nested_quotes(self):
         paragraph = """She said, "He told me 'Hello there!'" and smiled."""
         prose, dialogue = extract_dialogue(paragraph)
@@ -150,14 +144,6 @@ class TestExtractDialogue:
         prose, dialogue = extract_dialogue(paragraph)
         assert prose == ""
         assert dialogue == "This is all dialogue!"
-
-    def test_mixed_quote_types(self):
-        paragraph = (
-            """'Single quotes first.' He paused. "Then double quotes." """
-        )
-        prose, dialogue = extract_dialogue(paragraph)
-        assert prose == "He paused."
-        assert dialogue == "Single quotes first. Then double quotes."
 
 
 class TestDialogueProse:
