@@ -23,9 +23,10 @@ def extract_dialogue(paragraph: str) -> tuple[str, str]:
     Returns:
         tuple[str, str]: A tuple of dialogue and prose.
     """
-    dialogue, prose = [], []
-    current_text = []
-    in_dialogue = False
+    dialogue: list[str] = []
+    prose: list[str] = []
+    current_text: list[str] = []
+    in_dialogue: bool = False
 
     for char in paragraph:
         if char == '"':
@@ -45,8 +46,10 @@ def extract_dialogue(paragraph: str) -> tuple[str, str]:
     else:
         prose.append("".join(current_text).strip())
 
-    clean_prose = " ".join(prose).replace("  ", " ").strip()
-    clean_dialogue = " ".join(dialogue).replace("  ", " ").strip()
+    clean_prose: str = " ".join(prose).replace("  ", " ").strip().rstrip(",")
+    clean_dialogue: str = (
+        " ".join(dialogue).replace("  ", " ").strip().rstrip(",")
+    )
 
     return clean_dialogue, clean_prose
 
