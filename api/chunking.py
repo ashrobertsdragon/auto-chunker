@@ -64,14 +64,18 @@ def count_punctuation(dialogue: str, prose: str) -> tuple[int, str, int, str]:
             counts and whether to use singular or plural version of the word
             'sentence'.
     """
-    dialogue_sentences = 0
-    prose_sentences = 0
+    dialogue_sentences: int = 0
+    prose_sentences: int = 0
     for mark in PUNCTUATION:
         dialogue_sentences += dialogue.count(mark)
         prose_sentences += prose.count(mark)
-    d_sentence = "sentence" if dialogue_sentences == 1 else "sentences"
 
-    p_sentence = "sentence" if prose_sentences == 1 else "sentences"
+    dialogue_sentences = 1 if dialogue_sentences == 0 else dialogue_sentences
+
+    prose_sentences = 1 if prose_sentences == 0 else prose_sentences
+    d_sentence: str = "sentence" if dialogue_sentences == 1 else "sentences"
+
+    p_sentence: str = "sentence" if prose_sentences == 1 else "sentences"
 
     return dialogue_sentences, d_sentence, prose_sentences, p_sentence
 
