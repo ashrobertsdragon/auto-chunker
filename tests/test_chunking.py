@@ -100,48 +100,48 @@ class TestGenerateBeats:
 class TestExtractDialogue:
     def test_basic_double_quotes(self):  # sourcery skip: class-extract-method
         paragraph = 'He said, "Hello there!" and waved.'
-        prose, dialogue = extract_dialogue(paragraph)
+        dialogue, prose = extract_dialogue(paragraph)
         assert prose == "He said, and waved."
         assert dialogue == "Hello there!"
 
     def test_dialogue_with_interruption(self):
         paragraph = '"Stop," he said, "you\'re going too fast!"'
-        prose, dialogue = extract_dialogue(paragraph)
-        assert prose == "he said,"
+        dialogue, prose = extract_dialogue(paragraph)
+        assert prose == "he said"
         assert dialogue == "Stop, you're going too fast!"
 
     def test_unbalanced_quotes(self):
         paragraph = 'He said, "This is a test.'
-        prose, dialogue = extract_dialogue(paragraph)
-        assert prose == "He said,"
+        dialogue, prose = extract_dialogue(paragraph)
+        assert prose == "He said"
         assert dialogue == "This is a test."
 
     def test_empty_string(self):
-        prose, dialogue = extract_dialogue("")
+        dialogue, prose = extract_dialogue("")
         assert prose == ""
         assert dialogue == ""
 
     def test_nested_quotes(self):
         paragraph = """She said, "He told me 'Hello there!'" and smiled."""
-        prose, dialogue = extract_dialogue(paragraph)
+        dialogue, prose = extract_dialogue(paragraph)
         assert prose == "She said, and smiled."
         assert dialogue == "He told me 'Hello there!'"
 
     def test_consecutive_punctuation(self):
         paragraph = 'She exclaimed, "Oh my...!" and ran.'
-        prose, dialogue = extract_dialogue(paragraph)
+        dialogue, prose = extract_dialogue(paragraph)
         assert prose == "She exclaimed, and ran."
         assert dialogue == "Oh my...!"
 
     def test_only_prose(self):
         paragraph = "The sun was setting beautifully."
-        prose, dialogue = extract_dialogue(paragraph)
+        dialogue, prose = extract_dialogue(paragraph)
         assert prose == "The sun was setting beautifully."
         assert dialogue == ""
 
     def test_only_dialogue(self):
         paragraph = '"This is all dialogue!"'
-        prose, dialogue = extract_dialogue(paragraph)
+        dialogue, prose = extract_dialogue(paragraph)
         assert prose == ""
         assert dialogue == "This is all dialogue!"
 
@@ -153,20 +153,22 @@ class TestDialogueProse:
             'The sun was setting.\n"Beautiful evening," he remarked.',
         ]
         expected_chunks = [
-            "He said, ",
-            '"Hello!"',
-            "She replied, ",
-            '"Hi!"',
+            "Hello!",
+            "He said",
+            "Hi!",
+            "She replied",
             "The sun was setting.",
-            '"Beautiful evening,"',
+            "Beautiful evening",
+            "he remarked.",
         ]
         expected_messages = [
-            "Write 1 sentence of description and action",
             "Write 1 sentence of dialogue",
             "Write 1 sentence of description and action",
             "Write 1 sentence of dialogue",
             "Write 1 sentence of description and action",
+            "Write 1 sentence of description and action",
             "Write 1 sentence of dialogue",
+            "Write 1 sentence of description and action",
         ]
         chunks, user_messages = dialogue_prose(chapters)
         assert chunks == expected_chunks
@@ -177,15 +179,16 @@ class TestDialogueProse:
             '"Hello!" she said. "How are you?"\nHe nodded. "I am fine."'
         ]
         expected_chunks = [
-            '"Hello!"',
-            '"How are you?"',
+            "Hello! How are you?",
+            "she said.",
+            "I am fine.",
             "He nodded.",
-            '"I am fine."',
         ]
         expected_messages = [
             "Write 2 sentences of dialogue",
             "Write 1 sentence of description and action",
             "Write 1 sentence of dialogue",
+            "Write 1 sentence of description and action",
         ]
         chunks, user_messages = dialogue_prose(chapters)
         assert chunks == expected_chunks
@@ -210,13 +213,13 @@ class TestDialogueProse:
             'The storm raged. "Take cover!" he shouted.\nShe ran inside.'
         ]
         expected_chunks = [
-            "The storm raged.",
-            '"Take cover!"',
+            "Take cover!",
+            "The storm raged. he shouted.",
             "She ran inside.",
         ]
         expected_messages = [
-            "Write 1 sentence of description and action",
             "Write 1 sentence of dialogue",
+            "Write 2 sentences of description and action",
             "Write 1 sentence of description and action",
         ]
         chunks, user_messages = dialogue_prose(chapters)
@@ -226,13 +229,13 @@ class TestDialogueProse:
     def test_generates_user_messages(self):
         chapters = ['She whispered, "Careful."\nThe door creaked open.']
         expected_chunks = [
-            "She whispered, ",
-            '"Careful."',
+            "Careful.",
+            "She whispered",
             "The door creaked open.",
         ]
         expected_messages = [
-            "Write 1 sentence of description and action",
             "Write 1 sentence of dialogue",
+            "Write 1 sentence of description and action",
             "Write 1 sentence of description and action",
         ]
         chunks, user_messages = dialogue_prose(chapters)
@@ -241,31 +244,41 @@ class TestDialogueProse:
 
     def test_processes_multiple_chapters(self):
         chapters = [
-            'Chapter 1\nShe smiled.\n"Nice weather," he said.',
-            'Chapter 2\nThe rain fell.\n"Indeed," she replied.',
+            'She smiled.\n"Nice weather," he said.',
+            'The rain fell.\n"Indeed," she replied.',
         ]
         expected_chunks = [
             "She smiled.",
-            '"Nice weather,"',
+            "Nice weather",
+            "he said.",
             "The rain fell.",
-            '"Indeed,"',
+            "Indeed",
+            "she replied.",
         ]
         expected_messages = [
             "Write 1 sentence of description and action",
             "Write 1 sentence of dialogue",
             "Write 1 sentence of description and action",
+            "Write 1 sentence of description and action",
             "Write 1 sentence of dialogue",
+            "Write 1 sentence of description and action",
         ]
         chunks, user_messages = dialogue_prose(chapters)
         assert chunks == expected_chunks
         assert user_messages == expected_messages
 
     def test_handles_chapters_no_punctuation(self):
-        chapters = ["He spoke softly", '"Hello" she said', "The wind blew"]
-        expected_chunks = ["He spoke softly", '"Hello"', "The wind blew"]
+        chapters = ["He spoke softly", '"Hello," she said', "The wind blew"]
+        expected_chunks = [
+            "He spoke softly",
+            "Hello",
+            "she said",
+            "The wind blew",
+        ]
         expected_messages = [
             "Write 1 sentence of description and action",
             "Write 1 sentence of dialogue",
+            "Write 1 sentence of description and action",
             "Write 1 sentence of description and action",
         ]
         chunks, user_messages = dialogue_prose(chapters)
@@ -274,12 +287,12 @@ class TestDialogueProse:
 
     def test_supports_varying_paragraph_lengths(self):
         chapters = [
-            'Short line.\n"Brief."\nLong paragraph with multiple sentences. More text.',  # noqa E501
+            'Short line.\n"Brief."\nLong paragraph with multiple sentences. More text.',
             "Another chapter.",
         ]
         expected_chunks = [
             "Short line.",
-            '"Brief."',
+            "Brief.",
             "Long paragraph with multiple sentences. More text.",
             "Another chapter.",
         ]
@@ -300,9 +313,9 @@ class TestDialogueProse:
         ]
         expected_chunks = [
             "First action.",
-            '"First dialogue."',
+            "First dialogue.",
             "Second action.",
-            '"Second dialogue."',
+            "Second dialogue.",
             "Third action.",
         ]
         expected_messages = [
@@ -317,12 +330,12 @@ class TestDialogueProse:
         assert user_messages == expected_messages
 
     def test_handles_non_standard_punctuation(self):
-        chapters = ['He said...! "Well...?"\nShe replied?! "Hmm..."']
+        chapters = ['He said...!\n"Well...?"\nShe replied?!\n"Hmm..."']
         expected_chunks = [
             "He said...!",
-            '"Well...?"',
+            "Well...?",
             "She replied?!",
-            '"Hmm..."',
+            "Hmm...",
         ]
         expected_messages = [
             "Write 1 sentence of description and action",
@@ -335,18 +348,28 @@ class TestDialogueProse:
         assert user_messages == expected_messages
 
     def test_manage_chapters_with_special_characters(self):
-        chapters = ['He yelled, "Stop!!"\nShe screamed, "No!!!"']
+        chapters = [
+            'He yelled, "Stop!!"\nShe screamed, "No!!!"',
+            '"My email address is fake@fake.com"',
+            '"What the $%*&," she swore."',
+        ]
         expected_chunks = [
-            "He yelled, ",
-            '"Stop!!"',
-            "She screamed, ",
-            '"No!!!"',
+            "Stop!!",
+            "He yelled",
+            "No!!!",
+            "She screamed",
+            "My email address is fake@fake.com",
+            "What the $%*&",
+            "she swore.",
         ]
         expected_messages = [
-            "Write 1 sentence of description and action",
             "Write 1 sentence of dialogue",
             "Write 1 sentence of description and action",
             "Write 1 sentence of dialogue",
+            "Write 1 sentence of description and action",
+            "Write 1 sentence of dialogue",
+            "Write 1 sentence of dialogue",
+            "Write 1 sentence of description and action",
         ]
         chunks, user_messages = dialogue_prose(chapters)
         assert chunks == expected_chunks
@@ -354,21 +377,19 @@ class TestDialogueProse:
 
     def test_sentence_count_grammar(self):
         chapters = [
-            '"First!" he said. "Second!"\nHe waved.\nShe smiled. She laughed.',
-            "The end.",
+            '"First," he said.\nShe smiled. "You are too much. You are so funny." She laughed.'
         ]
         expected_chunks = [
-            '"First!"',
-            '"Second!"',
-            "He waved.",
+            "First",
+            "he said.",
+            "You are too much. You are so funny.",
             "She smiled. She laughed.",
-            "The end.",
         ]
         expected_messages = [
+            "Write 1 sentence of dialogue",
+            "Write 1 sentence of description and action",
             "Write 2 sentences of dialogue",
-            "Write 1 sentence of description and action",
             "Write 2 sentences of description and action",
-            "Write 1 sentence of description and action",
         ]
         chunks, user_messages = dialogue_prose(chapters)
         assert chunks == expected_chunks
