@@ -4,8 +4,8 @@ from typing import Any
 import openai
 from loguru import logger
 
-from _proto.auto_chunker_pb2 import ChunkResponse
-from openai_client import OpenAIAPI
+from api._proto.auto_chunker_pb2 import ChunkResponse
+from api.openai_client import OpenAIAPI
 
 CLIENT = OpenAIAPI()
 

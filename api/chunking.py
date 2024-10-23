@@ -2,9 +2,9 @@ import re
 
 from decouple import config
 
-from api_management import call_gpt_api
-from chunking_method import ChunkingMethod
-from data_preparation import (
+from api.api_management import call_gpt_api
+from api.chunking_method import ChunkingMethod
+from api.data_preparation import (
     count_tokens,
     get_end_paragraph_tokens,
     separate_into_chapters,

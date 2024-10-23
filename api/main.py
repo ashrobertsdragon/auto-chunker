@@ -1,12 +1,12 @@
 import grpc
 from concurrent import futures
-import _proto.auto_chunker_pb2 as auto_chunker
-import _proto.auto_chunker_pb2_grpc as auto_chunker_grpc
-import _proto.jsonl_file_creator_pb2 as jsonl_file_creator
-import _proto.jsonl_file_creator_pb2_grpc as jsonl_file_creator_grpc
+import api._proto.auto_chunker_pb2 as auto_chunker
+import api._proto.auto_chunker_pb2_grpc as auto_chunker_grpc
+import api._proto.jsonl_file_creator_pb2 as jsonl_file_creator
+import api._proto.jsonl_file_creator_pb2_grpc as jsonl_file_creator_grpc
 
-import write_csv
-from chunking import chunk_text
+import api.write_csv as write_csv
+from api.chunking import chunk_text
 
 
 def chunk(request: auto_chunker.ChunkRequest) -> auto_chunker.ChunkResponse:
