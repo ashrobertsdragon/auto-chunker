@@ -98,7 +98,7 @@ def error_handle(e: Any, retry_count: int = 0) -> int | ChunkResponse:
 
 
 def call_gpt_api(
-    prompt: str,
+    chapter_prompt: str,
     client=CLIENT,
     retry_count: int = 0,
 ) -> str | ChunkResponse:
@@ -115,10 +115,12 @@ def call_gpt_api(
             JSONL if the API call fails.
     """
 
-    role_script = "You are an expert developmental editor who specializes in "
-    "writing scene beats that are clear and concise. For the following "
-    "chapter, please reverse engineer the scene beats for the author. Provide "
-    "only the beats and not any commentary the beginning or end."
+    role_script = "You are an expert writer who specializes in "
+    "writing scene beats that are clear and concise."
+    prompt = (
+        "For the following chapter, please reverse engineer the scene beats for the author. Provide only the beats. DO NOT PROVIDE ANY COMMENTARY OR COMMENT ON THE STORY. Return only a list of scene beats."
+        + chapter_prompt
+    )
     messages = [
         {"role": "system", "content": role_script},
         {"role": "user", "content": prompt},
@@ -126,6 +128,8 @@ def call_gpt_api(
 
     try:
         response = client.call_api(messages)
+        if response:
+            logger.info(response._request_id)
         if response.choices and response.choices[0].message.content:
             answer = response.choices[0].message.content.strip()
         else:
