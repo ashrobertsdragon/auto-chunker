@@ -15,7 +15,7 @@ from api.data_preparation import TOKENIZER
 @pytest.fixture
 def mock_config(mocker):
     return mocker.patch(
-        "chunking.config",
+        "api.chunking.config",
         side_effect=lambda key, **kwargs: {
             "OPENAI_API_KEY": "test_key",
             "OPENAI_ORG_ID": "test_org",
@@ -29,7 +29,9 @@ def mock_config(mocker):
 
 class TestGenerateBeats:
     def test_generates_beats_for_multiple_chapters(self, mocker):
-        mocker.patch("chunking.call_gpt_api", return_value="Generated beat")
+        mocker.patch(
+            "api.chunking.call_gpt_api", return_value="Generated beat"
+        )
         chapters = ["Chapter 1 text", "Chapter 2 text"]
 
         chunk_list, user_message_list = generate_beats(chapters)
@@ -45,7 +47,9 @@ class TestGenerateBeats:
         assert "words for a chapter" in user_message_list[1]
 
     def test_handles_empty_chapter_list(self, mocker):
-        mocker.patch("chunking.call_gpt_api", return_value="Generated beat")
+        mocker.patch(
+            "api.chunking.call_gpt_api", return_value="Generated beat"
+        )
         chapters = []
 
         chunk_list, user_message_list = generate_beats(chapters)
@@ -54,7 +58,9 @@ class TestGenerateBeats:
         assert user_message_list == []
 
     def test_constructs_correct_user_message_format(self, mocker):
-        mocker.patch("chunking.call_gpt_api", return_value="Generated beat")
+        mocker.patch(
+            "api.chunking.call_gpt_api", return_value="Generated beat"
+        )
         chapter = "This is a test chapter with five words"
 
         _, user_message_list = generate_beats([chapter])
@@ -66,7 +72,9 @@ class TestGenerateBeats:
         assert "Generated beat" in message
 
     def test_preserves_original_chapters_in_chunk_list(self, mocker):
-        mocker.patch("chunking.call_gpt_api", return_value="Generated beat")
+        mocker.patch(
+            "api.chunking.call_gpt_api", return_value="Generated beat"
+        )
         chapters = ["Chapter 1: A beginning", "Chapter 2: The middle part"]
 
         chunk_list, _ = generate_beats(chapters)
@@ -76,7 +84,9 @@ class TestGenerateBeats:
         assert isinstance(chunk_list[1], str)
 
     def test_handles_single_word_chapter(self, mocker):
-        mocker.patch("chunking.call_gpt_api", return_value="Generated beat")
+        mocker.patch(
+            "api.chunking.call_gpt_api", return_value="Generated beat"
+        )
         chapter = "OneWordChapter"
 
         chunk_list, user_message_list = generate_beats([chapter])
@@ -86,7 +96,9 @@ class TestGenerateBeats:
         assert "Write 1 words" in user_message_list[0]
 
     def test_returns_correct_tuple_structure(self, mocker):
-        mocker.patch("chunking.call_gpt_api", return_value="Generated beat")
+        mocker.patch(
+            "api.chunking.call_gpt_api", return_value="Generated beat"
+        )
         chapters = ["Test chapter"]
 
         result = generate_beats(chapters)
@@ -471,7 +483,7 @@ class TestSlidingWindow:
 class TestChunkText:
     def test_calls_separate_into_chapters(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
-        mocker.patch("chunking.dialogue_prose", return_value=([], []))
+        mocker.patch("api.chunking.dialogue_prose", return_value=([], []))
         separate_spy = mocker.spy(api.chunking, "separate_into_chapters")
 
         chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
@@ -481,7 +493,7 @@ class TestChunkText:
     def test_maps_chunk_type_to_correct_function(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         mock_func = mocker.patch(
-            "chunking.dialogue_prose", return_value=([], [])
+            "api.chunking.dialogue_prose", return_value=([], [])
         )
 
         chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
@@ -497,7 +509,7 @@ class TestChunkText:
     def test_handles_empty_book_input_gracefully(self, mocker):
         book = ""
         mock_func = mocker.patch(
-            "chunking.dialogue_prose", return_value=([], [])
+            "api.chunking.dialogue_prose", return_value=([], [])
         )
 
         chapters, user_messages = chunk_text(
@@ -513,18 +525,18 @@ class TestChunkText:
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
 
         mocker.patch(
-            "chunking.separate_into_chapters",
+            "api.chunking.separate_into_chapters",
             return_value=expected_chapters,
         )
 
         mock_dialogue_prose = mocker.patch(
-            "chunking.dialogue_prose", return_value=([], [])
+            "api.chunking.dialogue_prose", return_value=([], [])
         )
         mock_generate_beats = mocker.patch(
-            "chunking.generate_beats", return_value=([], [])
+            "api.chunking.generate_beats", return_value=([], [])
         )
         mock_sliding_window = mocker.patch(
-            "chunking.sliding_window", return_value=([], [])
+            "api.chunking.sliding_window", return_value=([], [])
         )
 
         chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
@@ -540,7 +552,7 @@ class TestChunkText:
         book = "Chapter 1 text *** Chapter 2 text"
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
         mock_separate = mocker.patch(
-            "chunking.separate_into_chapters",
+            "api.chunking.separate_into_chapters",
             return_value=expected_chapters,
         )
 
@@ -557,11 +569,11 @@ class TestChunkText:
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
 
         mocker.patch(
-            "chunking.separate_into_chapters",
+            "api.chunking.separate_into_chapters",
             return_value=expected_chapters,
         )
         mocker.patch(
-            "chunking.dialogue_prose",
+            "api.chunking.dialogue_prose",
             return_value=(expected_chapters, ["Some user message"]),
         )
 

@@ -2,7 +2,7 @@ import time
 
 import pytest  # noqa F401
 
-from write_csv import create_csv_str
+from api.write_csv import create_csv_str
 
 
 class TestCreateCsvStr:

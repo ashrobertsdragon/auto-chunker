@@ -7,7 +7,7 @@ from api.openai_client import OpenAIAPI
 @pytest.fixture
 def mock_config(mocker):
     return mocker.patch(
-        "openai_client.config",
+        "api.openai_client.config",
         side_effect=lambda key, **kwargs: {
             "OPENAI_API_KEY": "test_key",
             "OPENAI_ORG_ID": "test_org",
@@ -36,7 +36,7 @@ def openai_api(mocker, mock_config):
             self.project = project
             self.chat = FakeChat()
 
-    mocker.patch("openai_client.OpenAI", FakeOpenAI)
+    mocker.patch("api.openai_client.OpenAI", FakeOpenAI)
     return OpenAIAPI()
 
 

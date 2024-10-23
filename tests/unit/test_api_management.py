@@ -89,7 +89,7 @@ class TestErrorHandle:
             pass
 
         mock_error = CustomError("Custom error without response")
-        mocker.patch("api_management.time.sleep")
+        mocker.patch("api.api_management.time.sleep")
         result = error_handle(mock_error)
         assert isinstance(result, int)
         assert result == 1
@@ -131,19 +131,19 @@ class TestErrorHandle:
         )
 
     def test_replicate_increment_retry_count(self, mocker, mock_custom_error):
-        mocker.patch("api_management.time.sleep")
+        mocker.patch("api.api_management.time.sleep")
         result = error_handle(mock_custom_error, retry_count=2)
         assert result == 3
 
     def test_exponential_backoff_in_retry(self, mocker, mock_custom_error):
-        mock_sleep = mocker.patch("api_management.time.sleep")
+        mock_sleep = mocker.patch("api.api_management.time.sleep")
 
         error_handle(mock_custom_error, retry_count=3)
 
         mock_sleep.assert_called_once_with(17)
 
     def test_max_retry_count_exceeded(self, mocker, mock_custom_error):
-        mocker.patch("api_management.time.sleep")
+        mocker.patch("api.api_management.time.sleep")
         result = error_handle(mock_custom_error, retry_count=5)
         assert isinstance(result, ChunkResponse)
         assert "A critical error has occurred" in result.status_message
@@ -160,7 +160,7 @@ class TestCallGptApi:
     ):
         prompt = "Test prompt"
         mock_error_handle = mocker.patch(
-            "api_management.error_handle",
+            "api.api_management.error_handle",
             return_value=ChunkResponse(
                 jsonl_content="",
                 status_message="A critical error has occurred. Administrator has been contacted.",
@@ -175,9 +175,9 @@ class TestCallGptApi:
 
     def test_default_retry_count(self, mocker, fake_client_without_response):
         prompt = "Test prompt"
-        mocker.patch("api_management.time.sleep")
+        mocker.patch("api.api_management.time.sleep")
         mock_error_handle = mocker.patch(
-            "api_management.error_handle",
+            "api.api_management.error_handle",
             return_value=ChunkResponse(
                 jsonl_content="",
                 status_message="A critical error has occurred. Administrator has been contacted.",
@@ -193,7 +193,7 @@ class TestCallGptApi:
     ):
         prompt = "Test prompt"
         mocker.patch(
-            "api_management.error_handle",
+            "api.api_management.error_handle",
             return_value=ChunkResponse(
                 jsonl_content="",
                 status_message="A critical error has occurred. Administrator has been contacted.",

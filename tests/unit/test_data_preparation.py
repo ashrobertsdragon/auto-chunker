@@ -83,7 +83,7 @@ class TestCountTokens:
         text = "Test text"
 
         mock_tokenizer = mocker.patch(
-            "data_preparation.TOKENIZER.encode", return_value=[1, 2, 3]
+            "api.data_preparation.TOKENIZER.encode", return_value=[1, 2, 3]
         )
         count_tokens(text)
 
