@@ -212,7 +212,6 @@ def chunk_text(
     chapters: list[str] = separate_into_chapters(book)
     chunk_map = {
         ChunkingMethod.DIALOGUE_PROSE: dialogue_prose,
-        ChunkingMethod.GENERATE_BEATS: generate_beats,
         ChunkingMethod.SLIDING_WINDOW: sliding_window,
     }
     if chunk_type not in chunk_map:

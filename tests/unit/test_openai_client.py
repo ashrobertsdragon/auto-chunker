@@ -1,7 +1,7 @@
 import pytest
 from openai._exceptions import OpenAIError
 
-from openai_client import OpenAIAPI
+from api.openai_client import OpenAIAPI
 
 
 @pytest.fixture

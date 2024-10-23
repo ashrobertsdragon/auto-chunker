@@ -1,15 +1,15 @@
 import pytest
 
-import chunking
-from chunking import (
+import api.chunking
+from api.chunking import (
     chunk_text,
     generate_beats,
     extract_dialogue,
     dialogue_prose,
     sliding_window,
 )
-from chunking_method import ChunkingMethod
-from data_preparation import TOKENIZER
+from api.chunking_method import ChunkingMethod
+from api.data_preparation import TOKENIZER
 
 
 @pytest.fixture
@@ -472,7 +472,7 @@ class TestChunkText:
     def test_calls_separate_into_chapters(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         mocker.patch("chunking.dialogue_prose", return_value=([], []))
-        separate_spy = mocker.spy(chunking, "separate_into_chapters")
+        separate_spy = mocker.spy(api.chunking, "separate_into_chapters")
 
         chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
 

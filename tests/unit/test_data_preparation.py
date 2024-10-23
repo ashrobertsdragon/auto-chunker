@@ -2,7 +2,7 @@ import pytest
 import time
 
 
-from data_preparation import separate_into_chapters, count_tokens
+from api.data_preparation import separate_into_chapters, count_tokens
 
 
 class TestCountTokens:
