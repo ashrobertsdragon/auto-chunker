@@ -1,6 +1,7 @@
 import re
 
 from decouple import config
+from loguru import logger
 
 from api.api_management import call_gpt_api
 from api.chunking_method import ChunkingMethod
@@ -142,16 +143,21 @@ def generate_beats(chapters: list[str]) -> tuple[list[str], list[str]]:
     user_message_list = []
     chunk_list = []
 
-    for chapter in chapters:
+    for i, chapter in enumerate(chapters, start=1):
         words = len(chapter.split(" "))
-        prompt = f"Chapter: {chapter}"
-        chapter_beats = call_gpt_api(prompt)
-        user_message_list.append(
-            f"Write {words} words for a chapter with the following scene "
-            f"beats:\n{chapter_beats}"
+        chapter_prompt = f"Chapter: {chapter}"
+        logger.debug(
+            f"Sending {words} to GPT-4o Mini for chapter {i} of {len(chapters)}"
         )
-        chunk_list.append(chapter)
-    return chunk_list, user_message_list
+        chapter_beats = call_gpt_api(chapter_prompt)
+        if isinstance(chapter_beats, str):
+            user_message_list.append(
+                f"Write {words} words for a chapter with the following scene "
+                f"beats:\n{chapter_beats}"
+            )
+            chunk_list.append(chapter)
+        return chunk_list, user_message_list
+    return chapter_prompt
 
 
 def sliding_window(chapters: list[str]) -> tuple[list[str], list[str]]:
@@ -200,6 +206,8 @@ def chunk_text(
 
     Returns:
         tuple[list, list]: A tuple of formatted chunks and user messages.
+        ChunkResponse: A response object containing empty JSONL content and
+            an error status message.
     """
     chapters: list[str] = separate_into_chapters(book)
     chunk_map = {

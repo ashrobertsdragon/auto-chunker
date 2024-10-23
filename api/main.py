@@ -10,9 +10,12 @@ from api.chunking import chunk_text
 
 
 def chunk(request: auto_chunker.ChunkRequest) -> auto_chunker.ChunkResponse:
-    chunks, user_messages = chunk_text(
-        request.text_content, request.chunking_method
+    work: tuple[list[str], list[str]] | auto_chunker.ChunkResponse = (
+        chunk_text(request.text_content, request.chunking_method)
     )
+    if work.status_message:
+        return work
+    chunks, user_messages = work
     csv_content = write_csv.create_csv_str(chunks, user_messages, request.role)
     with grpc.insecure_channel("jsonl-file-creator:50053") as channel:
         stub = jsonl_file_creator_grpc.JsonlFileCreatorStub(channel)
@@ -20,7 +23,9 @@ def chunk(request: auto_chunker.ChunkRequest) -> auto_chunker.ChunkResponse:
             jsonl_file_creator.CreateJsonlRequest(csv_content=csv_content)
         )
         jsonl_content = response.jsonl_content
-    return auto_chunker.ChunkResponse(jsonl_content=jsonl_content)
+    return auto_chunker.ChunkResponse(
+        jsonl_content=jsonl_content, status_message=""
+    )
 
 
 def serve() -> None:
