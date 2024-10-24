@@ -49,6 +49,7 @@ def fake_client():
                 created=1728933352,
                 model="gpt-4o-mini",
                 object="chat.completion",
+                _request_id="123456",
             )
 
     return FakeClient()
@@ -72,6 +73,7 @@ def fake_client_without_response():
                 created=1728933352,
                 model="gpt-4o-mini",
                 object="chat.completion",
+                _request_id="123456",
             )
 
     return FakeClient()
