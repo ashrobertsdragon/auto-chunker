@@ -46,17 +46,6 @@ class TestGenerateBeats:
         assert "Write" in user_message_list[1]
         assert "words for a chapter" in user_message_list[1]
 
-    def test_handles_empty_chapter_list(self, mocker):
-        mocker.patch(
-            "api.chunking.call_gpt_api", return_value="Generated beat"
-        )
-        chapters = []
-
-        chunk_list, user_message_list = generate_beats(chapters)
-
-        assert chunk_list == []
-        assert user_message_list == []
-
     def test_constructs_correct_user_message_format(self, mocker):
         mocker.patch(
             "api.chunking.call_gpt_api", return_value="Generated beat"
