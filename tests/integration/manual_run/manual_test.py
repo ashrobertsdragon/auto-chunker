@@ -1,19 +1,10 @@
-import csv
-from pathlib import Path
+import pytest  # noqa F401
 
-import pytest
+import csv
 
 from api.chunking import chunk_text
 from api.chunking_method import ChunkingMethod
 from api.write_csv import create_csv_str
-
-
-@pytest.fixture
-def book() -> str:
-    with Path("tests", "integration", "sample", "test_sample.txt").open(
-        "r"
-    ) as f:
-        return f.read()
 
 
 def test_all(book):
