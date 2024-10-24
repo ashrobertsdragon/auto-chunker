@@ -11,6 +11,7 @@ from api.data_preparation import (
     separate_into_chapters,
     TOKENIZER,
 )
+from api._proto.auto_chunker_pb2 import ChunkResponse
 
 
 PUNCTUATION: list[str] = [".", "?", "!"]
@@ -129,7 +130,9 @@ def dialogue_prose(chapters: list[str]) -> tuple[list[str], list[str]]:
     return chunks, user_messages
 
 
-def generate_beats(chapters: list[str]) -> tuple[list[str], list[str]]:
+def generate_beats(
+    chapters: list[str],
+) -> tuple[list[str], list[str]] | ChunkResponse:
     """
     Generate beats for each chapter in the book using an LLM.
 
@@ -146,18 +149,18 @@ def generate_beats(chapters: list[str]) -> tuple[list[str], list[str]]:
     for i, chapter in enumerate(chapters, start=1):
         words = len(chapter.split(" "))
         chapter_prompt = f"Chapter: {chapter}"
-        logger.debug(
+        logger.info(
             f"Sending {words} to GPT-4o Mini for chapter {i} of {len(chapters)}"
         )
         chapter_beats = call_gpt_api(chapter_prompt)
-        if isinstance(chapter_beats, str):
-            user_message_list.append(
-                f"Write {words} words for a chapter with the following scene "
-                f"beats:\n{chapter_beats}"
-            )
-            chunk_list.append(chapter)
-        return chunk_list, user_message_list
-    return chapter_prompt
+        if not isinstance(chapter_beats, str) and chapter_beats.status_message:
+            return chapter_beats
+        user_message_list.append(
+            f"Write {words} words for a chapter with the following scene "
+            f"beats:\n{chapter_beats}"
+        )
+        chunk_list.append(chapter)
+    return chunk_list, user_message_list
 
 
 def sliding_window(chapters: list[str]) -> tuple[list[str], list[str]]:
@@ -210,8 +213,12 @@ def chunk_text(
             an error status message.
     """
     chapters: list[str] = separate_into_chapters(book)
+
+    if not chapters:
+        raise ValueError("Book text must contain at least one chapter")
     chunk_map = {
         ChunkingMethod.DIALOGUE_PROSE: dialogue_prose,
+        ChunkingMethod.GENERATE_BEATS: generate_beats,
         ChunkingMethod.SLIDING_WINDOW: sliding_window,
     }
     if chunk_type not in chunk_map:
