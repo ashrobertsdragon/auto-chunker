@@ -1,3 +1,4 @@
+import re
 import tiktoken
 
 TOKENIZER = tiktoken.get_encoding("cl100k_base")
@@ -48,4 +49,4 @@ def separate_into_chapters(text: str) -> list:
     """
     Separates the text into chapters
     """
-    return text.split("***")
+    return re.split(r"\s\*\*\*\s*", text)
