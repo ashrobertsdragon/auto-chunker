@@ -153,7 +153,7 @@ def generate_beats(
             f"Sending {words} to GPT-4o Mini for chapter {i} of {len(chapters)}"
         )
         chapter_beats = call_gpt_api(chapter_prompt)
-        if not isinstance(chapter_beats, str) and chapter_beats.status_message:
+        if hasattr(chapter_beats, "status_message"):
             return chapter_beats
         user_message_list.append(
             f"Write {words} words for a chapter with the following scene "

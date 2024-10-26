@@ -137,7 +137,7 @@ def call_gpt_api(
 
     except tuple([NoMessageError] + unresolvable_errors()) as e:
         retry_or_error = error_handle(e=e, retry_count=retry_count)
-        if retry_or_error.status_message:
+        if hasattr(retry_or_error, "status_message"):
             return retry_or_error
         answer = call_gpt_api(prompt, client, retry_count)
     return answer
