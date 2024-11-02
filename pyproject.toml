@@ -5,11 +5,14 @@ description = "Chunks text and saves it as a jsonl file"
 authors = [{name = "Ashlynn Antrobus", email = "ashlynn@prosepal.io"}]
 requires-python = ">=3.10"
 dependencies = [
-    "grpcio-tools>=1.66.2",
+    "fastapi>=0.115.4",
     "loguru>=0.7.2",
+    "mangum>=0.19.0",
     "openai>=1.51.2",
     "python-decouple>=3.8",
+    "requests>=2.32.3",
     "tiktoken>=0.8.0",
+    "uvicorn>=0.32.0",
 ]
 
 [tool.uv]
