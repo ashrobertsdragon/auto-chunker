@@ -2,9 +2,9 @@ import csv
 
 import pytest  # noqa F401
 
-from api.chunking import chunk_text
-from api.chunking_method import ChunkingMethod
-from api.write_csv import create_csv_str
+from api.application.chunking import chunk_text
+from api.application.chunking_method import ChunkingMethod
+from api.application.write_csv import create_csv_str
 
 
 def test_dialogue_prose(book):

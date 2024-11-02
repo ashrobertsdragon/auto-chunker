@@ -3,16 +3,16 @@ import re
 from decouple import config
 from loguru import logger
 
-from api.api_management import call_gpt_api
-from api.chunking_method import ChunkingMethod
-from api.data_preparation import (
+from api.errors._exceptions import APIError
+from api.outgoing.openai_management import call_gpt_api
+from api.application.chunking_method import ChunkingMethod
+from api.application.data_preparation import (
     count_tokens,
     get_end_paragraph_tokens,
     separate_into_chapters,
     TOKENIZER,
 )
-from api._proto.auto_chunker_pb2 import ChunkResponse
-
+from api.application.write_csv import create_csv_str
 
 PUNCTUATION: list[str] = [".", "?", "!"]
 
@@ -132,7 +132,7 @@ def dialogue_prose(chapters: list[str]) -> tuple[list[str], list[str]]:
 
 def generate_beats(
     chapters: list[str],
-) -> tuple[list[str], list[str]] | ChunkResponse:
+) -> tuple[list[str], list[str]]:
     """
     Generate beats for each chapter in the book using an LLM.
 
@@ -153,8 +153,6 @@ def generate_beats(
             f"Sending {words} to GPT-4o Mini for chapter {i} of {len(chapters)}"
         )
         chapter_beats = call_gpt_api(chapter_prompt)
-        if hasattr(chapter_beats, "status_message"):
-            return chapter_beats
         user_message_list.append(
             f"Write {words} words for a chapter with the following scene "
             f"beats:\n{chapter_beats}"
@@ -209,8 +207,10 @@ def chunk_text(
 
     Returns:
         tuple[list, list]: A tuple of formatted chunks and user messages.
-        ChunkResponse: A response object containing empty JSONL content and
-            an error status message.
+
+    Raises:
+        ValueError: If the book text does not contain at least one chapter.
+        ValueError: If the chunking method is not supported.
     """
     chapters: list[str] = separate_into_chapters(book)
 
@@ -225,3 +225,27 @@ def chunk_text(
         raise ValueError(f"Chunk method {chunk_type} not supported")
     chunking_func = chunk_map[chunk_type]
     return chunking_func(chapters)
+
+
+def initiate_auto_chunker(
+    text_content: str, chunking_method: ChunkingMethod, role: str
+) -> str:
+    """
+    Split the book into prose and dialogue chunks.
+
+    Args:
+        text_content (str): The book text to chunk.
+        chunking_method (ChunkingMethod): The type of chunking to use.
+        role (str): The role of the user.
+
+    Returns:
+        str: CSV content of the chunked text.
+
+    Raises:
+        APIError: If there is an error during the chunking process.
+    """
+    try:
+        chunks, user_messages = chunk_text(text_content, chunking_method)
+        return create_csv_str(chunks, user_messages, role)
+    except ValueError as e:
+        raise APIError from e

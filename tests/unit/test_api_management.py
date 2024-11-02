@@ -3,9 +3,11 @@ import pytest
 from openai import BadRequestError
 from openai.types.chat.chat_completion import ChatCompletion, Choice
 
-from api.api_management import call_gpt_api, error_handle, NoMessageError
-
-from api._proto.auto_chunker_pb2 import ChunkResponse
+from api.outgoing.openai_management import (
+    call_gpt_api,
+    error_handle,
+    NoMessageError,
+)
 
 
 @pytest.fixture
@@ -83,8 +85,7 @@ class TestErrorHandle:
     def test_unresolvable_error_handling(self, mocker, mock_error):
         # sourcery skip: class-extract-method
         result = error_handle(mock_error)
-        assert isinstance(result, ChunkResponse)
-        assert "A critical error has occurred" in result.status_message
+        assert result == 500
 
     def test_resolvable_error_handling(self, mocker, mock_error):
         class CustomError(Exception):
@@ -98,12 +99,11 @@ class TestErrorHandle:
 
     def test_logs_error_details(self, mocker, mock_error):
         result = error_handle(mock_error)
-        assert "A critical error has occurred" in result.status_message
+        assert result == 500
 
     def test_error_handle_unknown_status(self, mocker, mock_error):
         result = error_handle(mock_error)
-        assert isinstance(result, ChunkResponse)
-        assert "A critical error has occurred" in result.status_message
+        assert result == 500
 
     def test_manage_401_error(self, mocker):
         class Custom401Error(Exception):
@@ -112,8 +112,7 @@ class TestErrorHandle:
         mock_401_error = Custom401Error("401 Error")
 
         result = error_handle(mock_401_error, retry_count=3)
-        assert isinstance(result, ChunkResponse)
-        assert "A critical error has occurred" in result.status_message
+        assert result == 500
 
     def test_quota_exceeded_error_message(self, mocker):
         class ExceededQuotaError(Exception):
@@ -123,14 +122,7 @@ class TestErrorHandle:
             "You have exceeded your current quota"
         )
         result = error_handle(mock_quota_error)
-        assert "A critical error has occurred" in result.status_message
-
-    def test_error_image_for_unresolvable_errors(self, mocker, mock_error):
-        result = error_handle(mock_error)
-        assert (
-            '<img src="/static/alert-light.png" alt="error icon" id="endError">'  # noqa E501
-            in result.status_message
-        )
+        assert result == 500
 
     def test_replicate_increment_retry_count(self, mocker, mock_custom_error):
         mocker.patch("api.api_management.time.sleep")
@@ -147,8 +139,7 @@ class TestErrorHandle:
     def test_max_retry_count_exceeded(self, mocker, mock_custom_error):
         mocker.patch("api.api_management.time.sleep")
         result = error_handle(mock_custom_error, retry_count=5)
-        assert isinstance(result, ChunkResponse)
-        assert "A critical error has occurred" in result.status_message
+        assert result == 500
 
 
 class TestCallGptApi:
@@ -162,11 +153,7 @@ class TestCallGptApi:
     ):
         prompt = "Test prompt"
         mock_error_handle = mocker.patch(
-            "api.api_management.error_handle",
-            return_value=ChunkResponse(
-                jsonl_content="",
-                status_message="A critical error has occurred. Administrator has been contacted.",
-            ),
+            "api.api_management.error_handle", return_value=500
         )
 
         call_gpt_api(prompt, client=fake_client_without_response)
@@ -179,11 +166,7 @@ class TestCallGptApi:
         prompt = "Test prompt"
         mocker.patch("api.api_management.time.sleep")
         mock_error_handle = mocker.patch(
-            "api.api_management.error_handle",
-            return_value=ChunkResponse(
-                jsonl_content="",
-                status_message="A critical error has occurred. Administrator has been contacted.",
-            ),
+            "api.api_management.error_handle", return_value=500
         )
 
         call_gpt_api(prompt, client=fake_client_without_response)
@@ -194,17 +177,10 @@ class TestCallGptApi:
         self, mocker, fake_client_without_response
     ):
         prompt = "Test prompt"
-        mocker.patch(
-            "api.api_management.error_handle",
-            return_value=ChunkResponse(
-                jsonl_content="",
-                status_message="A critical error has occurred. Administrator has been contacted.",
-            ),
-        )
+        mocker.patch("api.api_management.error_handle", return_value=500)
 
         result = call_gpt_api(
             prompt, client=fake_client_without_response, retry_count=5
         )
 
-        assert isinstance(result, ChunkResponse)
-        assert "A critical error has occurred" in result.status_message
+        assert result == 500

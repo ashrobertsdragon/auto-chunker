@@ -1,6 +1,6 @@
 from decouple import config
 from openai import OpenAI
-from openai._exceptions import OpenAIError
+from openai._exceptions import AuthenticationError
 from openai.types.chat.chat_completion import ChatCompletion
 
 
@@ -16,11 +16,11 @@ class OpenAIAPI:
         )
 
         if not api_key:
-            raise OpenAIError("OPENAI_API_KEY not set")
+            raise AuthenticationError("OPENAI_API_KEY not set")
         if not organization:
-            raise OpenAIError("OPENAI_ORG_ID not set")
+            raise AuthenticationError("OPENAI_ORG_ID not set")
         if not project:
-            raise OpenAIError("OPENAI_PROJECT_ID not set")
+            raise AuthenticationError("OPENAI_PROJECT_ID not set")
         self.client = OpenAI(
             api_key=api_key, organization=organization, project=project
         )
