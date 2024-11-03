@@ -1,17 +1,17 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 
-from api.incoming.authenticate import verify_api_key
-from api.application.chunking import chunk
-from api.application.chunking_method import ChunkingMethod
-from api.errors._exceptions import APIError
-from api.outgoing.call_jsonl_converter import get_jsonl
+from incoming.authenticate import verify_api_key
+from application.chunking import initiate_auto_chunker
+from application.chunking_method import ChunkingMethod
+from errors._exceptions import APIError
+from outgoing.call_jsonl_converter import get_jsonl
 
 
 app = FastAPI()
 
 
-@app.get("/api/chunk_text")
-async def chunk_text_api(
+@app.post("/api/generate-auto-chunk-jsonl")
+async def post_generate_auto_chunk_jsonl(
     book: str,
     chunk_type: ChunkingMethod,
     role: str,
@@ -29,7 +29,7 @@ async def chunk_text_api(
         bytes: JSONL content of the chunked text.
     """
     try:
-        csv_str = chunk(book, chunk_type, role)
+        csv_str = initiate_auto_chunker(book, chunk_type, role)
         return get_jsonl(csv_str)
     except ValueError as e:
         raise HTTPException(

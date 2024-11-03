@@ -1,13 +1,13 @@
 import pytest
 from openai._exceptions import OpenAIError
 
-from api.outgoing.openai_client import OpenAIAPI
+from outgoing.openai_client import OpenAIAPI
 
 
 @pytest.fixture
 def mock_config(mocker):
     return mocker.patch(
-        "api.openai_client.config",
+        "openai_client.config",
         side_effect=lambda key, **kwargs: {
             "OPENAI_API_KEY": "test_key",
             "OPENAI_ORG_ID": "test_org",
@@ -36,19 +36,19 @@ def openai_api(mocker, mock_config):
             self.project = project
             self.chat = FakeChat()
 
-    mocker.patch("api.openai_client.OpenAI", FakeOpenAI)
+    mocker.patch("openai_client.OpenAI", FakeOpenAI)
     return OpenAIAPI()
 
 
 class TestOpenAIAPI:
     def test_initialization_with_valid_config(self, openai_api):
-        assert openai_api.client.api_key == "test_key"
-        assert openai_api.model == "test_model"
-        assert openai_api.max_tokens == 2048
-        assert openai_api.temperature == 0.5
+        assert openai_client.api_key == "test_key"
+        assert openai_model == "test_model"
+        assert openai_max_tokens == 2048
+        assert openai_temperature == 0.5
 
     def test_call_api_with_valid_messages(self, mocker, openai_api):
-        response = openai_api.call_api([{"role": "user", "content": "Hello"}])
+        response = openai_call_api([{"role": "user", "content": "Hello"}])
 
         assert response["choices"][0]["message"]["content"] == "response"
 
@@ -105,5 +105,5 @@ class TestOpenAIAPI:
         }.get(key, kwargs.get("default"))
 
         api = OpenAIAPI()
-        assert api.max_tokens == 4096
-        assert api.temperature == 0.7
+        assert max_tokens == 4096
+        assert temperature == 0.7

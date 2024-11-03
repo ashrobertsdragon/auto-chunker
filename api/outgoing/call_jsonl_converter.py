@@ -2,8 +2,8 @@ import requests
 from decouple import config
 from requests.exceptions import RequestException
 
-from api.errors._exceptions import APIError, BadRequestError
-from api.errors.error_handling import error_handle
+from errors._exceptions import APIError, BadRequestError
+from errors.error_handling import error_handle
 
 
 def get_jsonl_api_config() -> tuple[str, str]:
@@ -28,14 +28,14 @@ def get_jsonl_api_config() -> tuple[str, str]:
 
 def get_jsonl(csv_str: str, retry_count: int = 0) -> str:
     """
-    Get the JSONL content from the API.
+    Get the JSONL content from the
 
     Args:
-        csv_str (str): The CSV content to send to the API.
+        csv_str (str): The CSV content to send to the
         retry_count (int, optional): The number of retries. Defaults to 0.
 
     Returns:
-        str: The JSONL content from the API.
+        str: The JSONL content from the
     """
     jsonl_api_key, jsonl_api_url = get_jsonl_api_config()
     try:

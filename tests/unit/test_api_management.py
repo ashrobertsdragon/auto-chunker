@@ -3,7 +3,7 @@ import pytest
 from openai import BadRequestError
 from openai.types.chat.chat_completion import ChatCompletion, Choice
 
-from api.outgoing.openai_management import (
+from outgoing.openai_management import (
     call_gpt_api,
     error_handle,
     NoMessageError,
@@ -17,7 +17,7 @@ def mock_error():
         response=httpx.Response(
             400,
             request=httpx.Request(
-                "GET", "https://api.openai.com/v1/chat/completions"
+                "GET", "https://openai.com/v1/chat/completions"
             ),
         ),
         body={"error": {"message": "A critical error has occurred"}},
@@ -92,7 +92,7 @@ class TestErrorHandle:
             pass
 
         mock_error = CustomError("Custom error without response")
-        mocker.patch("api.api_management.time.sleep")
+        mocker.patch("api_management.time.sleep")
         result = error_handle(mock_error)
         assert isinstance(result, int)
         assert result == 1
@@ -125,19 +125,19 @@ class TestErrorHandle:
         assert result == 500
 
     def test_replicate_increment_retry_count(self, mocker, mock_custom_error):
-        mocker.patch("api.api_management.time.sleep")
+        mocker.patch("api_management.time.sleep")
         result = error_handle(mock_custom_error, retry_count=2)
         assert result == 3
 
     def test_exponential_backoff_in_retry(self, mocker, mock_custom_error):
-        mock_sleep = mocker.patch("api.api_management.time.sleep")
+        mock_sleep = mocker.patch("api_management.time.sleep")
 
         error_handle(mock_custom_error, retry_count=3)
 
         mock_sleep.assert_called_once_with(17)
 
     def test_max_retry_count_exceeded(self, mocker, mock_custom_error):
-        mocker.patch("api.api_management.time.sleep")
+        mocker.patch("api_management.time.sleep")
         result = error_handle(mock_custom_error, retry_count=5)
         assert result == 500
 
@@ -153,7 +153,7 @@ class TestCallGptApi:
     ):
         prompt = "Test prompt"
         mock_error_handle = mocker.patch(
-            "api.api_management.error_handle", return_value=500
+            "api_management.error_handle", return_value=500
         )
 
         call_gpt_api(prompt, client=fake_client_without_response)
@@ -164,9 +164,9 @@ class TestCallGptApi:
 
     def test_default_retry_count(self, mocker, fake_client_without_response):
         prompt = "Test prompt"
-        mocker.patch("api.api_management.time.sleep")
+        mocker.patch("api_management.time.sleep")
         mock_error_handle = mocker.patch(
-            "api.api_management.error_handle", return_value=500
+            "api_management.error_handle", return_value=500
         )
 
         call_gpt_api(prompt, client=fake_client_without_response)
@@ -177,7 +177,7 @@ class TestCallGptApi:
         self, mocker, fake_client_without_response
     ):
         prompt = "Test prompt"
-        mocker.patch("api.api_management.error_handle", return_value=500)
+        mocker.patch("api_management.error_handle", return_value=500)
 
         result = call_gpt_api(
             prompt, client=fake_client_without_response, retry_count=5

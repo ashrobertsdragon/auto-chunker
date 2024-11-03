@@ -3,16 +3,16 @@ import re
 from decouple import config
 from loguru import logger
 
-from api.errors._exceptions import APIError
-from api.outgoing.openai_management import call_gpt_api
-from api.application.chunking_method import ChunkingMethod
-from api.application.data_preparation import (
+from errors._exceptions import APIError
+from outgoing.openai_management import call_gpt_api
+from application.chunking_method import ChunkingMethod
+from application.data_preparation import (
     count_tokens,
     get_end_paragraph_tokens,
     separate_into_chapters,
     TOKENIZER,
 )
-from api.application.write_csv import create_csv_str
+from application.write_csv import create_csv_str
 
 PUNCTUATION: list[str] = [".", "?", "!"]
 

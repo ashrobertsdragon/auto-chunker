@@ -3,8 +3,8 @@ from typing import Any
 
 from loguru import logger
 
-from api.errors._exceptions import unresolvable_errors, APIError
-from api.errors.email_admin import EmailAdmin
+from errors._exceptions import unresolvable_errors, APIError
+from errors.email_admin import EmailAdmin
 
 
 def email_admin(e: Exception):
