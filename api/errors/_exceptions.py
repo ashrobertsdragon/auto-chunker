@@ -5,7 +5,7 @@ class APIError(Exception):
     pass
 
 
-class BadRequestError:
+class BadRequestError(Exception):
     def __init__(self, status_code: int):
         self.status_code = status_code
 
