@@ -9,7 +9,7 @@ from errors.error_handling import email_admin
 api_key_header = APIKeyHeader(name="X-API-Key")
 
 
-def verify_api_key(api_key: str = Depends(api_key_header)):
+async def verify_api_key(api_key: str = Depends(api_key_header)):
     """
     Verify the API key provided in the request header.
 
@@ -19,7 +19,7 @@ def verify_api_key(api_key: str = Depends(api_key_header)):
     Raises:
         HTTPException: If the API key is invalid.
     """
-    HASHED_API_KEY = config("HASHED_API_KEY")
+    HASHED_API_KEY = config("WEB_CLIENT_HASHED_KEY")
     hashed_key = hashlib.sha256(api_key.encode()).hexdigest()
     try:
         if hashed_key != HASHED_API_KEY:
