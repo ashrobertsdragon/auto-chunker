@@ -1,5 +1,8 @@
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
 from decouple import config
-from openai import AsyncOpenAI
+from openai import OpenAI
 from openai._exceptions import AuthenticationError
 from openai.types.chat.chat_completion import ChatCompletion
 
@@ -21,14 +24,21 @@ class OpenAIAPI:
             raise AuthenticationError("OPENAI_ORG_ID not set")
         if not project:
             raise AuthenticationError("OPENAI_PROJECT_ID not set")
-        self.async_client = AsyncOpenAI(
+        self.client = OpenAI(
             api_key=api_key, organization=organization, project=project
         )
 
     async def call_api(self, messages: list[dict]) -> ChatCompletion:
-        return await self.async_client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            max_tokens=self.max_tokens,
-            temperature=self.temperature,
-        )
+        loop = asyncio.get_event_loop()
+        api_params = {
+            "model": self.model,
+            "messages": messages,
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+        }
+        with ThreadPoolExecutor() as executor:
+            return await loop.run_in_executor(
+                executor,
+                lambda x: self.client.chat.completions.create(**x),
+                api_params,
+            )
