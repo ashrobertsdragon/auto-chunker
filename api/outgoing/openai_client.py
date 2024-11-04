@@ -1,5 +1,5 @@
 from decouple import config
-from openai import OpenAI
+from openai import AsyncOpenAI
 from openai._exceptions import AuthenticationError
 from openai.types.chat.chat_completion import ChatCompletion
 
@@ -21,12 +21,12 @@ class OpenAIAPI:
             raise AuthenticationError("OPENAI_ORG_ID not set")
         if not project:
             raise AuthenticationError("OPENAI_PROJECT_ID not set")
-        self.client = OpenAI(
+        self.async_client = AsyncOpenAI(
             api_key=api_key, organization=organization, project=project
         )
 
-    def call_api(self, messages: list[dict]) -> ChatCompletion:
-        return self.client.chat.completions.create(
+    async def call_api(self, messages: list[dict]) -> ChatCompletion:
+        return await self.async_client.chat.completions.create(
             model=self.model,
             messages=messages,
             max_tokens=self.max_tokens,
