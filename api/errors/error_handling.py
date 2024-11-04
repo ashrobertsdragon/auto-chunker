@@ -16,7 +16,7 @@ def check_json_response(response: Any) -> dict:
 
     try:
         return response.json()
-    except ValueError:
+    except (AttributeError, ValueError):
         return {}
 
 
