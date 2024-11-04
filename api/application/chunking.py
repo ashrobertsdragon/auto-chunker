@@ -1,8 +1,10 @@
 import re
+from inspect import iscoroutinefunction
 
 from decouple import config
 from loguru import logger
 
+from _types import ChunkingFunction
 from errors._exceptions import APIError
 from outgoing.openai_management import call_gpt_api
 from application.chunking_method import ChunkingMethod
@@ -216,7 +218,7 @@ async def chunk_text(
 
     if not chapters:
         raise ValueError("Book text must contain at least one chapter")
-    chunk_map = {
+    chunk_map: dict[ChunkingMethod, ChunkingFunction] = {
         ChunkingMethod.DIALOGUE_PROSE: dialogue_prose,
         ChunkingMethod.GENERATE_BEATS: generate_beats,
         ChunkingMethod.SLIDING_WINDOW: sliding_window,
@@ -224,7 +226,9 @@ async def chunk_text(
     if chunk_type not in chunk_map:
         raise ValueError(f"Chunk method {chunk_type} not supported")
     chunking_func = chunk_map[chunk_type]
-    return await chunking_func(chapters)
+    if iscoroutinefunction(chunking_func):
+        return await chunking_func(chapters)
+    return chunking_func(chapters)
 
 
 async def initiate_auto_chunker(
