@@ -2,7 +2,7 @@ import pytest
 import time
 
 
-from application.data_preparation import (
+from src.application.data_preparation import (
     separate_into_chapters,
     count_tokens,
 )
@@ -86,7 +86,8 @@ class TestCountTokens:
         text = "Test text"
 
         mock_tokenizer = mocker.patch(
-            "data_preparation.TOKENIZER.encode", return_value=[1, 2, 3]
+            "application.data_preparation.TOKENIZER.encode",
+            return_value=[1, 2, 3],
         )
         count_tokens(text)
 

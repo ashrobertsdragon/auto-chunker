@@ -3,11 +3,9 @@ import pytest
 from openai import BadRequestError
 from openai.types.chat.chat_completion import ChatCompletion, Choice
 
-from outgoing.openai_management import (
-    call_gpt_api,
-    error_handle,
-    NoMessageError,
-)
+from src.outgoing.openai_management import call_gpt_api
+from src.errors.error_handling import error_handle
+from src.errors._exceptions import NoMessageError
 
 
 @pytest.fixture
