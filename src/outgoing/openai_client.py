@@ -3,8 +3,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 from decouple import config
 from openai import OpenAI
-from openai._exceptions import AuthenticationError
 from openai.types.chat.chat_completion import ChatCompletion
+
+from errors import AuthenticationError
 
 
 class OpenAIAPI:
