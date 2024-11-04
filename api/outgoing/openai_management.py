@@ -7,7 +7,7 @@ from errors._exceptions import unresolvable_errors, NoMessageError
 CLIENT = OpenAIAPI()
 
 
-def call_gpt_api(
+async def call_gpt_api(
     chapter_prompt: str,
     client=CLIENT,
     retry_count: int = 0,
@@ -35,7 +35,7 @@ def call_gpt_api(
     ]
 
     try:
-        response = client.call_api(messages)
+        response = await client.call_api(messages)
         if response:
             logger.info(response._request_id)
         if response.choices and response.choices[0].message.content:
@@ -44,6 +44,6 @@ def call_gpt_api(
             raise NoMessageError("No message content found")
 
     except tuple([NoMessageError] + unresolvable_errors()) as e:
-        retry_count = error_handle(e=e, retry_count=retry_count)
-        answer = call_gpt_api(prompt, client, retry_count)
+        retry_count = await error_handle(e=e, retry_count=retry_count)
+        answer = await call_gpt_api(prompt, client, retry_count)
     return answer

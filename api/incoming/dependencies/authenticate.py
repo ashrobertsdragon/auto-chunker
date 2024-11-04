@@ -28,5 +28,5 @@ async def verify_api_key(api_key: str = Depends(api_key_header)):
                 detail="Invalid API Key",
             )
     except HTTPException as e:
-        email_admin(e)
+        await email_admin(e)
         raise e

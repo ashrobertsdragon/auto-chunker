@@ -130,7 +130,7 @@ def dialogue_prose(chapters: list[str]) -> tuple[list[str], list[str]]:
     return chunks, user_messages
 
 
-def generate_beats(
+async def generate_beats(
     chapters: list[str],
 ) -> tuple[list[str], list[str]]:
     """
@@ -152,7 +152,7 @@ def generate_beats(
         logger.info(
             f"Sending {words} to GPT-4o Mini for chapter {i} of {len(chapters)}"
         )
-        chapter_beats = call_gpt_api(chapter_prompt)
+        chapter_beats = await call_gpt_api(chapter_prompt)
         user_message_list.append(
             f"Write {words} words for a chapter with the following scene "
             f"beats:\n{chapter_beats}"
@@ -195,7 +195,7 @@ def sliding_window(chapters: list[str]) -> tuple[list[str], list[str]]:
     return all_chunks[1:], all_chunks[:-1]
 
 
-def chunk_text(
+async def chunk_text(
     book: str, chunk_type: ChunkingMethod
 ) -> tuple[list[str], list[str]]:
     """
@@ -224,10 +224,10 @@ def chunk_text(
     if chunk_type not in chunk_map:
         raise ValueError(f"Chunk method {chunk_type} not supported")
     chunking_func = chunk_map[chunk_type]
-    return chunking_func(chapters)
+    return await chunking_func(chapters)
 
 
-def initiate_auto_chunker(
+async def initiate_auto_chunker(
     text_content: str, chunking_method: ChunkingMethod, role: str
 ) -> str:
     """
@@ -245,7 +245,7 @@ def initiate_auto_chunker(
         APIError: If there is an error during the chunking process.
     """
     try:
-        chunks, user_messages = chunk_text(text_content, chunking_method)
+        chunks, user_messages = await chunk_text(text_content, chunking_method)
         return create_csv_str(chunks, user_messages, role)
     except ValueError as e:
         raise APIError from e

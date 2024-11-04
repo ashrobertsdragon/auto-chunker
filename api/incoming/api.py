@@ -29,7 +29,7 @@ async def post_generate_auto_chunk_jsonl(
         bytes: JSONL content of the chunked text.
     """
     try:
-        csv_str = initiate_auto_chunker(
+        csv_str = await initiate_auto_chunker(
             request.book, ChunkingMethod(request.chunk_type), request.role
         )
         return await get_jsonl(csv_str)

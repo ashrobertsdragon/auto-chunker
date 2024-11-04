@@ -1,4 +1,4 @@
-import time
+import asyncio
 from typing import Any
 
 from loguru import logger
@@ -23,7 +23,7 @@ def check_json_response(response: Any) -> dict:
         return {}
 
 
-def error_handle(e: Any, retry_count: int = 0) -> int:
+async def error_handle(e: Any, retry_count: int = 0) -> int:
     """
     Determines whether error is unresolvable or should be retried. If
     unresolvable, error is logged and administrator is emailed before exit.
@@ -44,7 +44,7 @@ def error_handle(e: Any, retry_count: int = 0) -> int:
     error_message = "Unknown error occurred"
 
     if hasattr(e, "response"):
-        if json_data := check_json_response(e.response):
+        if json_data := await check_json_response(e.response):
             error_message = json_data.get("error", {}).get(
                 "message", "Unknown error"
             )
@@ -60,16 +60,16 @@ def error_handle(e: Any, retry_count: int = 0) -> int:
         or error_code == 401
         or "exceeded your current quota" in error_message
     ):
-        email_admin(e)
+        await email_admin(e)
         raise APIError
 
     retry_count += 1
     if retry_count > MAX_RETRY_COUNT:
         logger.error("Retry count exceeded")
-        email_admin(e)
+        await email_admin(e)
         raise APIError
     else:
         sleep_time = (MAX_RETRY_COUNT - retry_count) + (retry_count**2)
-        time.sleep(sleep_time)
+        await asyncio.sleep(sleep_time)
 
     return retry_count
