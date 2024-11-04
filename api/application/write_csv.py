@@ -6,7 +6,7 @@ def create_csv_str(
     chunks: list[str], user_messages: list[str], role: str
 ) -> str:
     """
-    Writes the chunks and user messages to a CSV file.
+    Writes the chunks and user messages to a CSV string.
 
     Args:
         chunks (list[str]): The list of proposed model responses.
@@ -14,7 +14,7 @@ def create_csv_str(
         role (str): The system message.
 
     Returns:
-        str: The CSV file.
+        str: The CSV string.
     """
     csv_buffer = io.StringIO()
     csv_writer = csv.writer(
