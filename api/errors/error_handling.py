@@ -7,6 +7,9 @@ from errors._exceptions import unresolvable_errors, APIError
 from errors.email_admin import EmailAdmin
 
 
+MAX_RETRY_COUNT = 2
+
+
 def email_admin(e: Exception):
     EmailAdmin(e).send_email()
 
@@ -61,12 +64,12 @@ def error_handle(e: Any, retry_count: int = 0) -> int:
         raise APIError
 
     retry_count += 1
-    if retry_count > 5:
+    if retry_count > MAX_RETRY_COUNT:
         logger.error("Retry count exceeded")
         email_admin(e)
         raise APIError
     else:
-        sleep_time = (5 - retry_count) + (retry_count**2)
+        sleep_time = (MAX_RETRY_COUNT - retry_count) + (retry_count**2)
         time.sleep(sleep_time)
 
     return retry_count
