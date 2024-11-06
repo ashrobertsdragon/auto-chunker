@@ -4,17 +4,17 @@ from inspect import iscoroutinefunction
 from decouple import config
 from loguru import logger
 
-from _types import ChunkingFunction
-from errors._exceptions import APIError
-from outgoing.openai_management import call_gpt_api
-from application.chunking_method import ChunkingMethod
-from application.data_preparation import (
+from auto_chunker._types import ChunkingFunction
+from auto_chunker.errors._exceptions import APIError
+from auto_chunker.outgoing.openai_management import call_gpt_api
+from auto_chunker.application.chunking_method import ChunkingMethod
+from auto_chunker.application.data_preparation import (
     count_tokens,
     get_end_paragraph_tokens,
     separate_into_chapters,
     TOKENIZER,
 )
-from application.write_csv import create_csv_str
+from auto_chunker.application.write_csv import create_csv_str
 
 PUNCTUATION: list[str] = [".", "?", "!"]
 

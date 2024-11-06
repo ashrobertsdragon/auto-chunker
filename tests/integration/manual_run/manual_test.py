@@ -2,9 +2,9 @@ import pytest  # noqa F401
 
 import csv
 
-from application.chunking import chunk_text
-from application.chunking_method import ChunkingMethod
-from application.write_csv import create_csv_str
+from auto_chunker.application.chunking import chunk_text
+from auto_chunker.application.chunking_method import ChunkingMethod
+from auto_chunker.application.write_csv import create_csv_str
 
 
 def test_all(book):
