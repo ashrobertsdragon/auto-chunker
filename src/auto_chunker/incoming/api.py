@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException, status
+from loguru import logger
 
 from auto_chunker.incoming.dependencies.authenticate import verify_api_key
 from auto_chunker.incoming.schema.auto_chunk_request_schema import (
@@ -11,6 +12,7 @@ from auto_chunker.outgoing.call_jsonl_converter import get_jsonl
 
 
 app = FastAPI()
+logger.info("Starting API")
 
 
 @app.post("/api/generate-auto-chunk-jsonl")
