@@ -5,17 +5,6 @@ resolution-markers = [
     "python_full_version >= '3.13'",
 ]
 
-[manifest]
-members = [
-    "auto-chunker",
-]
-requirements = [
-    { name = "pytest", specifier = ">=8.3.3" },
-    { name = "pytest-asyncio", specifier = ">=0.24.0" },
-    { name = "pytest-cov", specifier = ">=6.0.0" },
-    { name = "pytest-mock", specifier = ">=3.14.0" },
-]
-
 [[package]]
 name = "aiohappyeyeballs"
 version = "2.4.3"
@@ -159,7 +148,7 @@ wheels = [
 [[package]]
 name = "auto-chunker"
 version = "0.1.0"
-source = { virtual = "auto-chunker" }
+source = { virtual = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "fastapi" },
