@@ -46,8 +46,11 @@ class TestOpenAIAPI:
         assert openai_api.max_tokens == 2048
         assert openai_api.temperature == 0.5
 
-    def test_call_api_with_valid_messages(self, openai_api):
-        response = openai_api.call_api([{"role": "user", "content": "Hello"}])
+    @pytest.mark.asyncio
+    async def test_call_api_with_valid_messages(self, openai_api):
+        response = await openai_api.call_api([
+            {"role": "user", "content": "Hello"}
+        ])
 
         assert response["choices"][0]["message"]["content"] == "response"
 

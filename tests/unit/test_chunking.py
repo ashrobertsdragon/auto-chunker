@@ -480,7 +480,8 @@ class TestSlidingWindow:
 
 
 class TestChunkText:
-    def test_calls_separate_into_chapters(self, mocker):
+    @pytest.mark.asyncio
+    async def test_calls_separate_into_chapters(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         mocker.patch(
             "auto_chunker.application.chunking.dialogue_prose",
@@ -488,35 +489,38 @@ class TestChunkText:
         )
         separate_spy = mocker.spy(chunking, "separate_into_chapters")
 
-        chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
+        await chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
 
         separate_spy.assert_called_once_with(book)
 
-    def test_maps_chunk_type_to_correct_function(self, mocker):
+    @pytest.mark.asyncio
+    async def test_maps_chunk_type_to_correct_function(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         mock_func = mocker.patch(
             "auto_chunker.application.chunking.dialogue_prose",
             return_value=([], []),
         )
 
-        chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
+        await chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
 
         mock_func.assert_called_once()
 
-    def test_raises_value_error_for_unsupported_chunk_type(self):
+    @pytest.mark.asyncio
+    async def test_raises_value_error_for_unsupported_chunk_type(self):
         book = "Chapter 1 text *** Chapter 2 text"
 
         with pytest.raises(ValueError, match="Chunk method .* not supported"):
-            chunk_text(book, "UNSUPPORTED_METHOD")
+            await chunk_text(book, 7)
 
-    def test_handles_empty_book_input_gracefully(self, mocker):
+    @pytest.mark.asyncio
+    async def test_handles_empty_book_input_gracefully(self, mocker):
         book = ""
         mock_func = mocker.patch(
             "auto_chunker.application.chunking.dialogue_prose",
             return_value=([], []),
         )
 
-        chapters, user_messages = chunk_text(
+        chapters, user_messages = await chunk_text(
             book, ChunkingMethod.DIALOGUE_PROSE
         )
 
@@ -524,7 +528,8 @@ class TestChunkText:
         assert user_messages == []
         mock_func.assert_called_once_with([""])
 
-    def test_correct_function_called_for_chunk_type(self, mocker):
+    @pytest.mark.asyncio
+    async def test_correct_function_called_for_chunk_type(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
 
@@ -546,16 +551,17 @@ class TestChunkText:
             return_value=([], []),
         )
 
-        chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
+        await chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
         mock_dialogue_prose.assert_called_once_with(expected_chapters)
 
-        chunk_text(book, ChunkingMethod.GENERATE_BEATS)
+        await chunk_text(book, ChunkingMethod.GENERATE_BEATS)
         mock_generate_beats.assert_called_once_with(expected_chapters)
 
-        chunk_text(book, ChunkingMethod.SLIDING_WINDOW)
+        await chunk_text(book, ChunkingMethod.SLIDING_WINDOW)
         mock_sliding_window.assert_called_once_with(expected_chapters)
 
-    def test_returns_two_lists(self, mocker):
+    @pytest.mark.asyncio
+    async def test_returns_two_lists(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
         mock_separate = mocker.patch(
@@ -563,7 +569,7 @@ class TestChunkText:
             return_value=expected_chapters,
         )
 
-        result = chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
+        result = await chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
 
         mock_separate.assert_called_once_with(book)
         assert isinstance(result, tuple)
@@ -571,7 +577,8 @@ class TestChunkText:
         assert isinstance(result[0], list)  # Formatted text chunks
         assert isinstance(result[1], list)  # User messages
 
-    def test_user_messages_relevant_to_chunking(self, mocker):
+    @pytest.mark.asyncio
+    async def test_user_messages_relevant_to_chunking(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
 
@@ -580,10 +587,12 @@ class TestChunkText:
             return_value=expected_chapters,
         )
         mocker.patch(
-            "chunking.dialogue_prose",
+            "auto_chunker.application.chunking.dialogue_prose",
             return_value=(expected_chapters, ["Some user message"]),
         )
 
-        _, user_messages = chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
+        _, user_messages = await chunk_text(
+            book, ChunkingMethod.DIALOGUE_PROSE
+        )
 
         assert user_messages == ["Some user message"]

@@ -7,10 +7,13 @@ from auto_chunker.application.chunking_method import ChunkingMethod
 from auto_chunker.application.write_csv import create_csv_str
 
 
-def test_dialogue_prose(book):
+@pytest.mark.asyncio
+async def test_dialogue_prose(book):
     role = "system"
     chapters = len(book.split("***"))
-    chunks, user_messages = chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
+    chunks, user_messages = await chunk_text(
+        book, ChunkingMethod.DIALOGUE_PROSE
+    )
     csv_str = create_csv_str(chunks, user_messages, role)
     reader = csv.reader(csv_str.splitlines())
     rows = list(reader)
@@ -18,10 +21,13 @@ def test_dialogue_prose(book):
         assert len(row) == 3, f"Row {i + 1} has {len(row)} columns, expected 3"
 
 
-def test_sliding_window(book):
+@pytest.mark.asyncio
+async def test_sliding_window(book):
     role = "system"
     chapters = len(book.split("***"))
-    chunks, user_messages = chunk_text(book, ChunkingMethod.SLIDING_WINDOW)
+    chunks, user_messages = await chunk_text(
+        book, ChunkingMethod.SLIDING_WINDOW
+    )
     csv_str = create_csv_str(chunks, user_messages, role)
     reader = csv.reader(csv_str.splitlines())
     rows = list(reader)
@@ -32,10 +38,13 @@ def test_sliding_window(book):
     ), f"CSV has {len(rows)} rows, expected {chapters - 1}"
 
 
-def test_generate_beats(book):
+@pytest.mark.asyncio
+async def test_generate_beats(book):
     role = "system"
     chapters = len(book.split("***"))
-    chunks, user_messages = chunk_text(book, ChunkingMethod.GENERATE_BEATS)
+    chunks, user_messages = await chunk_text(
+        book, ChunkingMethod.GENERATE_BEATS
+    )
     csv_str = create_csv_str(chunks, user_messages, role)
     reader = csv.reader(csv_str.splitlines())
     rows = list(reader)
