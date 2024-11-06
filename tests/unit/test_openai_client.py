@@ -1,6 +1,5 @@
 import pytest
-from openai._exceptions import AuthenticationError
-
+from src.errors._exceptions import AuthenticationError
 from src.outgoing.openai_client import OpenAIAPI
 
 
@@ -60,10 +59,10 @@ class TestOpenAIAPI:
             "MAX_TOKENS": 2048,
             "TEMPERATURE": 0.5,
         }.get(key, kwargs.get("default"))
-
+        print(f"Imported AuthenticationError: {AuthenticationError}")
         with pytest.raises(AuthenticationError) as exc_info:
             OpenAIAPI()
-
+        print(f"Exception raised: {exc_info.type}")
         assert "OPENAI_API_KEY not set" in str(exc_info.value)
 
     def test_missing_or_invalid_project_id(self, mock_config):

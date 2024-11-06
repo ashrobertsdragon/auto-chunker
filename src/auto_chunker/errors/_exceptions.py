@@ -5,7 +5,7 @@ class APIError(Exception):
     pass
 
 
-class APIKeyError(APIError):
+class AuthenticationError(APIError):
     pass
 
 

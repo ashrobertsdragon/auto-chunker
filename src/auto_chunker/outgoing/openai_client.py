@@ -5,7 +5,7 @@ from decouple import config
 from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion
 
-from errors import AuthenticationError
+from errors._exceptions import AuthenticationError
 
 
 class OpenAIAPI:

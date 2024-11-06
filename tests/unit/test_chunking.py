@@ -478,7 +478,7 @@ class TestChunkText:
     def test_calls_separate_into_chapters(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         mocker.patch(
-            "application.chunking.dialogue_prose", return_value=([], [])
+            "src.application.chunking.dialogue_prose", return_value=([], [])
         )
         separate_spy = mocker.spy(chunking, "separate_into_chapters")
 
