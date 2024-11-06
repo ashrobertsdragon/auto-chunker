@@ -1,21 +1,21 @@
 import pytest
 
-from src.application import chunking
-from src.application.chunking import (
+from auto_chunker.application import chunking
+from auto_chunker.application.chunking import (
     chunk_text,
     generate_beats,
     extract_dialogue,
     dialogue_prose,
     sliding_window,
 )
-from src.application.chunking_method import ChunkingMethod
-from src.application.data_preparation import TOKENIZER
+from auto_chunker.application.chunking_method import ChunkingMethod
+from auto_chunker.application.data_preparation import TOKENIZER
 
 
 @pytest.fixture
 def mock_config(mocker):
     return mocker.patch(
-        "application.chunking.config",
+        "auto_chunker.application.chunking.config",
         side_effect=lambda key, **kwargs: {
             "OPENAI_API_KEY": "test_key",
             "OPENAI_ORG_ID": "test_org",
@@ -31,7 +31,8 @@ class TestGenerateBeats:
     @pytest.mark.asyncio
     async def test_generates_beats_for_multiple_chapters(self, mocker):
         mocker.patch(
-            "application.chunking.call_gpt_api", return_value="Generated beat"
+            "auto_chunker.application.chunking.call_gpt_api",
+            return_value="Generated beat",
         )
         chapters = ["Chapter 1 text", "Chapter 2 text"]
 
@@ -50,7 +51,8 @@ class TestGenerateBeats:
     @pytest.mark.asyncio
     async def test_constructs_correct_user_message_format(self, mocker):
         mocker.patch(
-            "application.chunking.call_gpt_api", return_value="Generated beat"
+            "auto_chunker.application.chunking.call_gpt_api",
+            return_value="Generated beat",
         )
         chapter = "This is a test chapter with five words"
 
@@ -65,7 +67,8 @@ class TestGenerateBeats:
     @pytest.mark.asyncio
     async def test_preserves_original_chapters_in_chunk_list(self, mocker):
         mocker.patch(
-            "application.chunking.call_gpt_api", return_value="Generated beat"
+            "auto_chunker.application.chunking.call_gpt_api",
+            return_value="Generated beat",
         )
         chapters = ["Chapter 1: A beginning", "Chapter 2: The middle part"]
 
@@ -78,7 +81,8 @@ class TestGenerateBeats:
     @pytest.mark.asyncio
     async def test_handles_single_word_chapter(self, mocker):
         mocker.patch(
-            "application.chunking.call_gpt_api", return_value="Generated beat"
+            "auto_chunker.application.chunking.call_gpt_api",
+            return_value="Generated beat",
         )
         chapter = "OneWordChapter"
 
@@ -91,7 +95,8 @@ class TestGenerateBeats:
     @pytest.mark.asyncio
     async def test_returns_correct_tuple_structure(self, mocker):
         mocker.patch(
-            "application.chunking.call_gpt_api", return_value="Generated beat"
+            "auto_chunker.application.chunking.call_gpt_api",
+            return_value="Generated beat",
         )
         chapters = ["Test chapter"]
 
@@ -478,7 +483,8 @@ class TestChunkText:
     def test_calls_separate_into_chapters(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         mocker.patch(
-            "src.application.chunking.dialogue_prose", return_value=([], [])
+            "auto_chunker.application.chunking.dialogue_prose",
+            return_value=([], []),
         )
         separate_spy = mocker.spy(chunking, "separate_into_chapters")
 
@@ -489,7 +495,8 @@ class TestChunkText:
     def test_maps_chunk_type_to_correct_function(self, mocker):
         book = "Chapter 1 text *** Chapter 2 text"
         mock_func = mocker.patch(
-            "application.chunking.dialogue_prose", return_value=([], [])
+            "auto_chunker.application.chunking.dialogue_prose",
+            return_value=([], []),
         )
 
         chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
@@ -505,7 +512,8 @@ class TestChunkText:
     def test_handles_empty_book_input_gracefully(self, mocker):
         book = ""
         mock_func = mocker.patch(
-            "application.chunking.dialogue_prose", return_value=([], [])
+            "auto_chunker.application.chunking.dialogue_prose",
+            return_value=([], []),
         )
 
         chapters, user_messages = chunk_text(
@@ -521,18 +529,21 @@ class TestChunkText:
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
 
         mocker.patch(
-            "application.chunking.separate_into_chapters",
+            "auto_chunker.application.chunking.separate_into_chapters",
             return_value=expected_chapters,
         )
 
         mock_dialogue_prose = mocker.patch(
-            "application.chunking.dialogue_prose", return_value=([], [])
+            "auto_chunker.application.chunking.dialogue_prose",
+            return_value=([], []),
         )
         mock_generate_beats = mocker.patch(
-            "application.chunking.generate_beats", return_value=([], [])
+            "auto_chunker.application.chunking.generate_beats",
+            return_value=([], []),
         )
         mock_sliding_window = mocker.patch(
-            "application.chunking.sliding_window", return_value=([], [])
+            "auto_chunker.application.chunking.sliding_window",
+            return_value=([], []),
         )
 
         chunk_text(book, ChunkingMethod.DIALOGUE_PROSE)
@@ -548,7 +559,7 @@ class TestChunkText:
         book = "Chapter 1 text *** Chapter 2 text"
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
         mock_separate = mocker.patch(
-            "application.chunking.separate_into_chapters",
+            "auto_chunker.application.chunking.separate_into_chapters",
             return_value=expected_chapters,
         )
 
@@ -565,7 +576,7 @@ class TestChunkText:
         expected_chapters = ["Chapter 1 text", "Chapter 2 text"]
 
         mocker.patch(
-            "application.chunking.separate_into_chapters",
+            "auto_chunker.application.chunking.separate_into_chapters",
             return_value=expected_chapters,
         )
         mocker.patch(

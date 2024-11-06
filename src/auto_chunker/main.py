@@ -1,3 +1,3 @@
-from incoming import api
+from auto_chunker.incoming import api
 
 app = api.app

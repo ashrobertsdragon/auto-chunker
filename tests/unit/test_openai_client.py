@@ -1,12 +1,12 @@
 import pytest
-from src.errors._exceptions import AuthenticationError
-from src.outgoing.openai_client import OpenAIAPI
+from auto_chunker.errors._exceptions import AuthenticationError
+from auto_chunker.outgoing.openai_client import OpenAIAPI
 
 
 @pytest.fixture
 def mock_config(mocker):
     return mocker.patch(
-        "src.outgoing.openai_client.config",
+        "auto_chunker.outgoing.openai_client.config",
         side_effect=lambda key, **kwargs: {
             "OPENAI_API_KEY": "test_key",
             "OPENAI_ORG_ID": "test_org",
@@ -35,7 +35,7 @@ def openai_api(mocker, mock_config):
             self.project = project
             self.chat = FakeChat()
 
-    mocker.patch("src.outgoing.openai_client.OpenAI", FakeOpenAI)
+    mocker.patch("auto_chunker.outgoing.openai_client.OpenAI", FakeOpenAI)
     return OpenAIAPI()
 
 

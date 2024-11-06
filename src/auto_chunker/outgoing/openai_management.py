@@ -1,8 +1,8 @@
 from loguru import logger
 
-from outgoing.openai_client import OpenAIAPI
-from errors.error_handling import error_handle
-from errors._exceptions import unresolvable_errors, NoMessageError
+from auto_chunker.outgoing.openai_client import OpenAIAPI
+from auto_chunker.errors.error_handling import error_handle
+from auto_chunker.errors._exceptions import unresolvable_errors, NoMessageError
 
 CLIENT = OpenAIAPI()
 

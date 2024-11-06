@@ -3,8 +3,8 @@ from typing import Any
 
 from loguru import logger
 
-from errors._exceptions import unresolvable_errors, APIError
-from errors.email_admin import EmailAdmin
+from auto_chunker.errors._exceptions import unresolvable_errors, APIError
+from auto_chunker.errors.email_admin import EmailAdmin
 
 
 MAX_RETRY_COUNT = 2

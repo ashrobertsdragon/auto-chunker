@@ -1,11 +1,13 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 
-from incoming.dependencies.authenticate import verify_api_key
-from incoming.schema.auto_chunk_request_schema import AutoChunkRequest
-from application.chunking import initiate_auto_chunker
-from application.chunking_method import ChunkingMethod
-from errors._exceptions import APIError
-from outgoing.call_jsonl_converter import get_jsonl
+from auto_chunker.incoming.dependencies.authenticate import verify_api_key
+from auto_chunker.incoming.schema.auto_chunk_request_schema import (
+    AutoChunkRequest,
+)
+from auto_chunker.application.chunking import initiate_auto_chunker
+from auto_chunker.application.chunking_method import ChunkingMethod
+from auto_chunker.errors._exceptions import APIError
+from auto_chunker.outgoing.call_jsonl_converter import get_jsonl
 
 
 app = FastAPI()

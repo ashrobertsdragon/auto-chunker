@@ -2,7 +2,7 @@ import pytest
 import time
 
 
-from src.application.data_preparation import (
+from auto_chunker.application.data_preparation import (
     separate_into_chapters,
     count_tokens,
 )

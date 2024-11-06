@@ -2,8 +2,8 @@ import aiohttp
 from decouple import config
 from aiohttp.client_exceptions import ClientResponseError
 
-from errors._exceptions import APIError, BadRequestError
-from errors.error_handling import error_handle
+from auto_chunker.errors._exceptions import APIError, BadRequestError
+from auto_chunker.errors.error_handling import error_handle
 
 
 def get_jsonl_api_config() -> tuple[str, str]:
