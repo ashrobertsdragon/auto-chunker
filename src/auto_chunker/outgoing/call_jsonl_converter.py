@@ -19,21 +19,14 @@ def get_jsonl_api_config() -> tuple[str, str]:
     """
     api_key: str = config("JSONL_API_KEY", default="")
     api_url: str = config("JSONL_API_URL", default="")
-    api_port: str = config("JSONL_API_PORT", default="")
-    api_endpoint: str = config("JSONL_API_ENDPOINT", default="")
     if not api_key:
         raise APIError("JSONL_API_KEY not found in environment variables")
     if not api_url:
         raise APIError("JSONL_API_URL not found in environment variables")
-    if not api_port:
-        raise APIError("JSONL_API_PORT not found in environment variables")
-    if not api_endpoint:
-        raise APIError("JSONL_API_ENDPOINT not found in environment variables")
     if not api_url.startswith(("http://", "https://")):
         api_url = f"http://{api_url}"
-    endpoint_url = f"{api_url}:{api_port}{api_endpoint}"
 
-    return api_key, endpoint_url
+    return api_key, api_url
 
 
 async def get_jsonl(csv_str: str, retry_count: int = 0) -> str:
