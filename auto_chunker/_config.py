@@ -12,14 +12,12 @@ def create_log_file():
 def serverless_logger():
     logger.remove()
     logger.add(serialize=True, level="INFO", enqueue=False)
-    return logger
 
 
 def server_logger():
     log_file = create_log_file()
     logger.remove()
     logger.add(log_file, rotation="5MB", level="INFO")
-    return logger
 
 
 server_envs = ["ec2", "development", "vps"]
