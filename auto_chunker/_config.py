@@ -1,3 +1,4 @@
+import sys
 from loguru import logger
 
 
@@ -11,7 +12,7 @@ def create_log_file():
 
 def serverless_logger():
     logger.remove()
-    logger.add(serialize=True, level="INFO", enqueue=False)
+    logger.add(sink=sys.stdout, serialize=True, level="INFO", enqueue=False)
 
 
 def server_logger():
