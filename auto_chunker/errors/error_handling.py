@@ -4,7 +4,7 @@ from typing import Any
 from loguru import logger
 
 from auto_chunker.errors._exceptions import unresolvable_errors, APIError
-from auto_chunker.errors.email_admin import EmailAdmin
+from auto_chunker.errors.email_admin import ResendSDK as EmailAdmin
 
 
 MAX_RETRY_COUNT = 2

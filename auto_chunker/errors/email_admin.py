@@ -1,3 +1,5 @@
+import resend
+from decouple import config
 from loguru import logger
 
 
@@ -16,6 +18,18 @@ class EmailAdminHandler:
         logger.info("Email sent to admin")
 
 
-class EmailAdmin(EmailAdminHandler):
+class ResendSDK(EmailAdminHandler):
+    def __init__(self, e: Exception) -> None:
+        super().__init__(e)
+        resend.api_key = config("RESEND_API_KEY")
+        admin_email = config("ADMIN_EMAIL")
+        self.params = {
+            "from": admin_email,
+            "to": admin_email,
+            "subject": "Error in Auto Chunker",
+            "html": f"<p>{self.error_message}</p>",
+        }
+
     def send_email(self) -> None:
+        resend.Emails.send(self.params)
         self._log_send_email()
